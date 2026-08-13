@@ -5,6 +5,7 @@
   --muted: #5f6f7f;
   --border: #dde5ee;
   --shadow: rgba(15, 23, 42, 0.08);
+  --panel: #f8fafc;
 }
 
 * {
@@ -84,4 +85,50 @@ body {
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--text);
+}
+
+.forecast {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.forecast-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.forecast-item {
+  flex: 1 1 42px;
+  min-width: 56px;
+  padding: 8px 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.forecast-day {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.forecast-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.forecast-temp {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 6px;
+}
+
+.forecast-error {
+  flex-basis: 100%;
+  font-size: 0.8rem;
+  color: var(--muted);
 }

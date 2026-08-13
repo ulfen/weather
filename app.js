@@ -10,6 +10,7 @@ const temperatureEl = document.getElementById("temperature");
 const conditionEl = document.getElementById("condition");
 const temperatureRangeEl = document.getElementById("temperature-range");
 const weatherIconEl = document.getElementById("weather-icon");
+const forecastRowEl = document.getElementById("forecast-row");
 
 const WEATHER_CODES = {
   0: { label: "Clear sky", icon: "☀️" },
@@ -49,14 +50,44 @@ function setWeatherFailure() {
   temperatureRangeEl.textContent = "--° / --°";
   weatherIconEl.textContent = "⚠️";
   weatherIconEl.setAttribute("aria-label", "Weather unavailable");
+  forecastRowEl.innerHTML = '<div class="forecast-item forecast-error">Forecast unavailable</div>';
 }
 
 function getWeatherCondition(code) {
   return WEATHER_CODES[code] || { label: "Unknown", icon: "❔" };
 }
 
+function renderForecast(days) {
+  forecastRowEl.innerHTML = "";
+
+  days.forEach((day) => {
+    const item = document.createElement("div");
+    item.className = "forecast-item";
+
+    const dayLabel = document.createElement("div");
+    dayLabel.className = "forecast-day";
+    const date = new Date(`${day.date}T00:00:00`);
+    dayLabel.textContent = date.toLocaleDateString("en-US", { weekday: "short" });
+
+    const icon = document.createElement("div");
+    icon.className = "forecast-icon";
+    const condition = getWeatherCondition(day.code);
+    icon.textContent = condition.icon;
+    icon.setAttribute("aria-label", condition.label);
+
+    const temp = document.createElement("div");
+    temp.className = "forecast-temp";
+    temp.textContent = `${day.max}° / ${day.min}°`;
+
+    item.appendChild(dayLabel);
+    item.appendChild(icon);
+    item.appendChild(temp);
+    forecastRowEl.appendChild(item);
+  });
+}
+
 async function fetchWeather() {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LOCATION.latitude}&longitude=${WEATHER_LOCATION.longitude}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LOCATION.latitude}&longitude=${WEATHER_LOCATION.longitude}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
 
   try {
     const response = await fetch(url);
@@ -75,15 +106,28 @@ async function fetchWeather() {
     const dailyData = data.daily;
     const weather = getWeatherCondition(currentData.weather_code);
     const currentTemp = Math.round(currentData.temperature_2m);
-    const high = Math.round(dailyData.temperature_2m_max[0]);
-    const low = Math.round(dailyData.temperature_2m_min[0]);
+
+    const forecastDays = dailyData.time.map((date, index) => ({
+      date,
+      code: dailyData.weather_code[index],
+      max: Math.round(dailyData.temperature_2m_max[index]),
+      min: Math.round(dailyData.temperature_2m_min[index]),
+    }));
 
     locationEl.textContent = `${WEATHER_LOCATION.city}, ${WEATHER_LOCATION.country}`;
     temperatureEl.textContent = `${currentTemp}°C`;
     conditionEl.textContent = weather.label;
-    temperatureRangeEl.textContent = `${high}° / ${low}°`;
     weatherIconEl.textContent = weather.icon;
     weatherIconEl.setAttribute("aria-label", `${weather.label} weather`);
+
+    const firstDay = forecastDays[0];
+    if (firstDay) {
+      temperatureRangeEl.textContent = `${firstDay.max}° / ${firstDay.min}°`;
+    } else {
+      temperatureRangeEl.textContent = "--° / --°";
+    }
+
+    renderForecast(forecastDays);
   } catch (error) {
     console.error("Weather fetch failed:", error);
     setWeatherFailure();
