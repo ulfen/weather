@@ -13,18 +13,17 @@
       <h1 id="weather-title">Weather</h1>
     </header>
 
-    <p class="location">Venlo, Netherlands</p>
+    <p class="location" id="location"></p>
 
     <div class="current-weather" aria-live="polite">
-      <div class="weather-icon" aria-label="Sunny weather">☀️</div>
-      <p class="temperature">23°C</p>
-      <p class="condition">Sunny</p>
+      <div class="weather-icon" id="weather-icon" aria-label="Sunny weather">☀️</div>
+      <p class="temperature" id="temperature"></p>
+      <p class="condition" id="condition"></p>
     </div>
 
-    <div class="temperature-range" aria-label="High and low temperatures">
-      23° / 14°
-    </div>
+    <div class="temperature-range" id="temperature-range" aria-label="High and low temperatures"></div>
   </section>
 </main>
+<script src="app.js" defer></script>
 </body>
 </html>
