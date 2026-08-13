@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="weather-app">
+  <section class="weather-card" aria-labelledby="weather-title">
+    <header class="weather-header">
+      <h1 id="weather-title">Weather</h1>
+    </header>
+
+    <p class="location">Venlo, Netherlands</p>
+
+    <div class="current-weather" aria-live="polite">
+      <div class="weather-icon" aria-label="Sunny weather">☀️</div>
+      <p class="temperature">23°C</p>
+      <p class="condition">Sunny</p>
+    </div>
+
+    <div class="temperature-range" aria-label="High and low temperatures">
+      23° / 14°
+    </div>
+  </section>
+</main>
+</body>
+</html>
