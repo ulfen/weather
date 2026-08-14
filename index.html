@@ -11,6 +11,11 @@
   <section class="weather-card" aria-labelledby="weather-title">
     <header class="weather-header">
       <h1 id="weather-title">Weather</h1>
+      <div class="location-search">
+        <input type="text" id="location-input" placeholder="Enter city or location" />
+        <button id="search-button">Search</button>
+        <div class="search-error" id="search-error"></div>
+      </div>
     </header>
 
     <p class="location" id="location"></p>

@@ -1,4 +1,4 @@
-const WEATHER_LOCATION = {
+let WEATHER_LOCATION = {
   city: "Venlo",
   country: "Netherlands",
   latitude: 51.37,
@@ -11,6 +11,9 @@ const conditionEl = document.getElementById("condition");
 const temperatureRangeEl = document.getElementById("temperature-range");
 const weatherIconEl = document.getElementById("weather-icon");
 const forecastRowEl = document.getElementById("forecast-row");
+const locationInputEl = document.getElementById("location-input");
+const searchButtonEl = document.getElementById("search-button");
+const searchErrorEl = document.getElementById("search-error");
 
 const WEATHER_CODES = {
   0: { label: "Clear sky", icon: "☀️" },
@@ -55,6 +58,52 @@ function setWeatherFailure() {
 
 function getWeatherCondition(code) {
   return WEATHER_CODES[code] || { label: "Unknown", icon: "❔" };
+}
+
+function showSearchError(message) {
+  searchErrorEl.textContent = message;
+  searchErrorEl.classList.add("visible");
+}
+
+function clearSearchError() {
+  searchErrorEl.textContent = "";
+  searchErrorEl.classList.remove("visible");
+}
+
+async function searchLocation() {
+  const query = locationInputEl.value.trim();
+  if (!query) return;
+
+  clearSearchError();
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Geocoding request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.results || data.results.length === 0) {
+      showSearchError(`Location "${query}" not found`);
+      return;
+    }
+
+    const result = data.results[0];
+    WEATHER_LOCATION = {
+      city: result.name,
+      country: result.country || "",
+      latitude: result.latitude,
+      longitude: result.longitude,
+    };
+
+    locationInputEl.value = "";
+    fetchWeather();
+  } catch (error) {
+    console.error("Location search failed:", error);
+    showSearchError("Failed to search location. Please try again.");
+  }
 }
 
 function renderForecast(days) {
@@ -133,5 +182,12 @@ async function fetchWeather() {
     setWeatherFailure();
   }
 }
+
+searchButtonEl.addEventListener("click", searchLocation);
+locationInputEl.addEventListener("keypress", (event) => {
+  if (event.key === "Enter") {
+    searchLocation();
+  }
+});
 
 fetchWeather();
