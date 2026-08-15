@@ -33,24 +33,33 @@
   - [x] Use day icons for 7-day forecast (full day includes both day and night, so use day icon)
   - [x] Verified: No errors, icons update based on is_day parameter
 
-## Phase 1c: UI Refresh (Current)
-- [ ] Remove "Weather" title from header
-- [ ] Make location name more prominent
-- [ ] Improve mobile card responsiveness (test at 320px, 375px)
-- [ ] Test overall layout on mobile
+## Phase 1c: Foundation & Code Polish
+- [ ] Remove "Weather" h1 title from header (already in todo)
+- [ ] Convert search UI from \<div\> to \<form\> (semantic + better accessibility)
+- [ ] Refactor fetchWeather() → separate data layer from rendering
+  - [ ] Create parseWeatherData(apiResponse) function
+  - [ ] Create renderCurrentWeather(data) function
+  - [ ] Keep fetchWeather() as orchestrator only
+- [ ] Refactor searchLocation() into steps (validate → fetch → update → render)
+- [ ] Simplify renderForecast() with template literals or cleaner DOM builder
+- [ ] Add data validation layer — check API responses have required fields
+- [ ] Improve error messaging (display actual error context, not generic text)
+- [ ] Document WEATHER_LOCATION data structure (JSDoc or inline comment)
+- [ ] Test error cases: no results, network failure, missing fields
+- [ ] Update CSS .weather-card from fixed width to max-width
+- [ ] Add function comments describing inputs/outputs
 
 ## Phase 2a: Horizontal Hourly Timeline
 - [ ] Extend Open-Meteo API request to include hourly data
 - [ ] Implement renderHourlyForecast() function
 - [ ] Create horizontal scrollable container for hourly cards
 - [ ] Display time, icon, and temperature for each hour (3-6 hour intervals)
-- [ ] Test horizontal scroll on mobile and desktop
+- [ ] Test horizontal scroll
 
 ## Phase 2b: Vertical 7-Day Forecast
 - [ ] Refactor forecast layout from horizontal flex-wrap to vertical stack
 - [ ] Update card styling for vertical presentation
 - [ ] Ensure day/date, icon, high/low temps display clearly
-- [ ] Test layout scannability
 
 ## Phase 2c: Add Precipitation to Forecast
 - [ ] Extend API request to include precipitation_probability
@@ -77,10 +86,9 @@
 - [ ] Implement collapsible header menu (click icon to toggle)
 - [ ] Add star icon toggle (★/☆) next to location name
 - [ ] Auto-add newly searched locations to history
-- [ ] Test collapsible menu on mobile, star toggle functionality
+- [ ] Test collapsible menu and star toggle functionality
 
 ## Phase 4: Polish, Enhancements & Validation
-- [ ] Mobile testing (320px, 375px, 425px viewports)
 - [ ] API error handling and edge cases
 - [ ] Accessibility audit (keyboard nav, color contrast, aria labels)
 - [ ] Visual refinements and cross-browser testing
