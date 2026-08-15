@@ -25,16 +25,15 @@
   - [x] Implement theme switching via CSS (no JS needed)
   - [x] Test theme switching in browser DevTools (working ✓)
   - [x] Verified: No errors, theme toggles correctly between light/dark
+- **Phase 1b: Day/Night Icons** ✅
+  - [x] Extend WEATHER_CODES with day/night icon variants (moon 🌙 for night)
+  - [x] Add is_day to current API request
+  - [x] Update getWeatherCondition() to accept isDay parameter
+  - [x] Use is_day for current weather icon (shows night moon if is_day=false)
+  - [x] Use day icons for 7-day forecast (full day includes both day and night, so use day icon)
+  - [x] Verified: No errors, icons update based on is_day parameter
 
-## Phase 1b: Day/Night Icons (Current)
-- [ ] Extend WEATHER_CODES with day/night icon variants (moon 🌙 for night)
-- [ ] Add is_day to current API request
-- [ ] Update getWeatherCondition() to accept isDay parameter
-- [ ] Use is_day for current weather icon (shows night moon if is_day=false)
-- [ ] Use day icons for 7-day forecast (full day includes both day and night, so use day icon)
-- [ ] Test current weather displays correct icon (day/night), forecast displays day icons
-
-## Phase 1c: UI Refresh
+## Phase 1c: UI Refresh (Current)
 - [ ] Remove "Weather" title from header
 - [ ] Make location name more prominent
 - [ ] Improve mobile card responsiveness (test at 320px, 375px)

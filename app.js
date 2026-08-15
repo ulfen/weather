@@ -18,34 +18,34 @@ const searchButtonEl = document.getElementById("search-button");
 const searchErrorEl = document.getElementById("search-error");
 
 const WEATHER_CODES = {
-  0: { label: "Clear sky", icon: "☀️" },
-  1: { label: "Mainly clear", icon: "🌤️" },
-  2: { label: "Partly cloudy", icon: "⛅" },
-  3: { label: "Overcast", icon: "☁️" },
-  45: { label: "Fog", icon: "🌫️" },
-  48: { label: "Rime fog", icon: "🌫️" },
-  51: { label: "Light drizzle", icon: "🌦️" },
-  53: { label: "Moderate drizzle", icon: "🌦️" },
-  55: { label: "Dense drizzle", icon: "🌧️" },
-  56: { label: "Light freezing drizzle", icon: "🌧️" },
-  57: { label: "Heavy freezing drizzle", icon: "🌧️" },
-  61: { label: "Slight rain", icon: "🌧️" },
-  63: { label: "Moderate rain", icon: "🌧️" },
-  65: { label: "Heavy rain", icon: "🌧️" },
-  66: { label: "Light freezing rain", icon: "🌧️" },
-  67: { label: "Heavy freezing rain", icon: "🌧️" },
-  71: { label: "Slight snow", icon: "❄️" },
-  73: { label: "Moderate snow", icon: "❄️" },
-  75: { label: "Heavy snow", icon: "❄️" },
-  77: { label: "Snow grains", icon: "❄️" },
-  80: { label: "Rain showers", icon: "🌦️" },
-  81: { label: "Heavy rain showers", icon: "🌧️" },
-  82: { label: "Violent rain showers", icon: "⛈️" },
-  85: { label: "Snow showers", icon: "🌨️" },
-  86: { label: "Heavy snow showers", icon: "🌨️" },
-  95: { label: "Thunderstorm", icon: "⛈️" },
-  96: { label: "Thunderstorm with hail", icon: "⛈️" },
-  99: { label: "Severe thunderstorm", icon: "⛈️" },
+  0: { label: "Clear sky", day: "☀️", night: "🌙" },
+  1: { label: "Mainly clear", day: "🌤️", night: "🌙" },
+  2: { label: "Partly cloudy", day: "⛅", night: "☁️" },
+  3: { label: "Overcast", day: "☁️", night: "☁️" },
+  45: { label: "Fog", day: "🌫️", night: "🌫️" },
+  48: { label: "Rime fog", day: "🌫️", night: "🌫️" },
+  51: { label: "Light drizzle", day: "🌦️", night: "🌧️" },
+  53: { label: "Moderate drizzle", day: "🌦️", night: "🌧️" },
+  55: { label: "Dense drizzle", day: "🌧️", night: "🌧️" },
+  56: { label: "Light freezing drizzle", day: "🌧️", night: "🌧️" },
+  57: { label: "Heavy freezing drizzle", day: "🌧️", night: "🌧️" },
+  61: { label: "Slight rain", day: "🌧️", night: "🌧️" },
+  63: { label: "Moderate rain", day: "🌧️", night: "🌧️" },
+  65: { label: "Heavy rain", day: "🌧️", night: "🌧️" },
+  66: { label: "Light freezing rain", day: "🌧️", night: "🌧️" },
+  67: { label: "Heavy freezing rain", day: "🌧️", night: "🌧️" },
+  71: { label: "Slight snow", day: "❄️", night: "❄️" },
+  73: { label: "Moderate snow", day: "❄️", night: "❄️" },
+  75: { label: "Heavy snow", day: "❄️", night: "❄️" },
+  77: { label: "Snow grains", day: "❄️", night: "❄️" },
+  80: { label: "Rain showers", day: "🌦️", night: "🌧️" },
+  81: { label: "Heavy rain showers", day: "🌧️", night: "🌧️" },
+  82: { label: "Violent rain showers", day: "⛈️", night: "⛈️" },
+  85: { label: "Snow showers", day: "🌨️", night: "🌨️" },
+  86: { label: "Heavy snow showers", day: "🌨️", night: "🌨️" },
+  95: { label: "Thunderstorm", day: "⛈️", night: "⛈️" },
+  96: { label: "Thunderstorm with hail", day: "⛈️", night: "⛈️" },
+  99: { label: "Severe thunderstorm", day: "⛈️", night: "⛈️" },
 };
 
 function setWeatherFailure() {
@@ -58,8 +58,12 @@ function setWeatherFailure() {
   forecastRowEl.innerHTML = '<div class="forecast-item forecast-error">Forecast unavailable</div>';
 }
 
-function getWeatherCondition(code) {
-  return WEATHER_CODES[code] || { label: "Unknown", icon: "❔" };
+function getWeatherCondition(code, isDay = true) {
+  const condition = WEATHER_CODES[code] || { label: "Unknown", day: "❔", night: "❔" };
+  return {
+    label: condition.label,
+    icon: isDay ? condition.day : condition.night
+  };
 }
 
 function showSearchError(message) {
@@ -122,7 +126,8 @@ function renderForecast(days) {
 
     const icon = document.createElement("div");
     icon.className = "forecast-icon";
-    const condition = getWeatherCondition(day.code);
+    // Use day icons for forecast (full day includes both day and night)
+    const condition = getWeatherCondition(day.code, true);
     icon.textContent = condition.icon;
     icon.setAttribute("aria-label", condition.label);
 
@@ -138,7 +143,7 @@ function renderForecast(days) {
 }
 
 async function fetchWeather() {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LOCATION.latitude}&longitude=${WEATHER_LOCATION.longitude}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LOCATION.latitude}&longitude=${WEATHER_LOCATION.longitude}&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
 
   try {
     const response = await fetch(url);
@@ -155,7 +160,8 @@ async function fetchWeather() {
 
     const currentData = data.current;
     const dailyData = data.daily;
-    const weather = getWeatherCondition(currentData.weather_code);
+    const isDay = currentData.is_day; // true = day, false = night
+    const weather = getWeatherCondition(currentData.weather_code, isDay);
     const currentTemp = Math.round(currentData.temperature_2m);
 
     const forecastDays = dailyData.time.map((date, index) => ({
