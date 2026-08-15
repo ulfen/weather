@@ -1,5 +1,12 @@
 // Theme is automatically applied via CSS @media (prefers-color-scheme: dark)
 
+/**
+ * Current location data
+ * @property {string} city - City name from geocoding API
+ * @property {string} country - Country name from geocoding API
+ * @property {number} latitude - Geographic latitude for Open-Meteo API
+ * @property {number} longitude - Geographic longitude for Open-Meteo API
+ */
 let WEATHER_LOCATION = {
   city: "Venlo",
   country: "Netherlands",
@@ -48,6 +55,9 @@ const WEATHER_CODES = {
   99: { label: "Severe thunderstorm", day: "⛈️", night: "⛈️" },
 };
 
+/**
+ * Displays error state when weather data cannot be fetched.
+ */
 function setWeatherFailure() {
   locationEl.textContent = `${WEATHER_LOCATION.city}, ${WEATHER_LOCATION.country}`;
   temperatureEl.textContent = "--°C";
@@ -58,6 +68,12 @@ function setWeatherFailure() {
   forecastRowEl.innerHTML = '<div class="forecast-item forecast-error">Forecast unavailable</div>';
 }
 
+/**
+ * Returns weather condition label and icon for a given WMO code.
+ * @param {number} code - WMO weather code
+ * @param {boolean} isDay - Whether it is daytime (true) or nighttime (false)
+ * @returns {object} Object with label and icon properties
+ */
 function getWeatherCondition(code, isDay = true) {
   const condition = WEATHER_CODES[code] || { label: "Unknown", day: "❔", night: "❔" };
   return {
@@ -66,16 +82,26 @@ function getWeatherCondition(code, isDay = true) {
   };
 }
 
+/**
+ * Displays an error message in the search error element.
+ * @param {string} message - Error message to display
+ */
 function showSearchError(message) {
   searchErrorEl.textContent = message;
   searchErrorEl.classList.add("visible");
 }
 
+/**
+ * Clears the search error message and hides the error element.
+ */
 function clearSearchError() {
   searchErrorEl.textContent = "";
   searchErrorEl.classList.remove("visible");
 }
 
+/**
+ * Searches for a location using Open-Meteo geocoding API and fetches weather.
+ */
 async function searchLocation() {
   const query = locationInputEl.value.trim();
   if (!query) return;
@@ -112,6 +138,10 @@ async function searchLocation() {
   }
 }
 
+/**
+ * Renders the 7-day forecast to the DOM.
+ * @param {array} days - Array of daily forecast objects with date, code, max, min
+ */
 function renderForecast(days) {
   forecastRowEl.innerHTML = "";
 
@@ -142,6 +172,10 @@ function renderForecast(days) {
   });
 }
 
+/**
+ * Fetches weather data from Open-Meteo API for current location.
+ * Updates DOM with current weather and forecast, or displays error state.
+ */
 async function fetchWeather() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LOCATION.latitude}&longitude=${WEATHER_LOCATION.longitude}&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
 
@@ -191,11 +225,9 @@ async function fetchWeather() {
   }
 }
 
-searchButtonEl.addEventListener("click", searchLocation);
-locationInputEl.addEventListener("keypress", (event) => {
-  if (event.key === "Enter") {
-    searchLocation();
-  }
+document.getElementById("location-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  searchLocation();
 });
 
 fetchWeather();

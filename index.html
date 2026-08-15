@@ -9,14 +9,13 @@
 </head>
 <body>
 <main class="weather-app">
-  <section class="weather-card" aria-labelledby="weather-title">
+  <section class="weather-card" aria-label="Weather forecast">
     <header class="weather-header">
-      <h1 id="weather-title">Weather</h1>
-      <div class="location-search">
+      <form class="location-search" id="location-form">
         <input type="text" id="location-input" placeholder="Enter city or location" />
-        <button id="search-button">Search</button>
+        <button type="submit" id="search-button">Search</button>
         <div class="search-error" id="search-error"></div>
-      </div>
+      </form>
     </header>
 
     <p class="location" id="location"></p>
