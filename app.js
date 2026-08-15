@@ -1,3 +1,5 @@
+// Theme is automatically applied via CSS @media (prefers-color-scheme: dark)
+
 let WEATHER_LOCATION = {
   city: "Venlo",
   country: "Netherlands",

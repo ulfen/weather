@@ -20,14 +20,13 @@
 - Single hardcoded latitude/longitude
 - 7-day forecast UI
 - Location search with Open-Meteo geocoding API
+- **Phase 1a: Dark/Light Theme (System Preference)** ✅
+  - [x] Add dark mode CSS variables with prefers-color-scheme media query
+  - [x] Implement theme switching via CSS (no JS needed)
+  - [x] Test theme switching in browser DevTools (working ✓)
+  - [x] Verified: No errors, theme toggles correctly between light/dark
 
-## Phase 1a: Dark/Light Theme (System Preference)
-- [ ] Add dark mode CSS variables (--bg-dark, --card-bg-dark, etc.)
-- [ ] Implement prefers-color-scheme media query in CSS
-- [ ] Create theme switching logic (apply dark/light classes)
-- [ ] Test theme on both light and dark OS settings
-
-## Phase 1b: Day/Night Icons
+## Phase 1b: Day/Night Icons (Current)
 - [ ] Extend WEATHER_CODES with night icon variants (moon 🌙 for nighttime)
 - [ ] Fetch sunrise/sunset times from Open-Meteo API
 - [ ] Implement isDaytime() function
