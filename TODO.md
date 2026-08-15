@@ -27,11 +27,12 @@
   - [x] Verified: No errors, theme toggles correctly between light/dark
 
 ## Phase 1b: Day/Night Icons (Current)
-- [ ] Extend WEATHER_CODES with night icon variants (moon 🌙 for nighttime)
-- [ ] Fetch sunrise/sunset times from Open-Meteo API
-- [ ] Implement isDaytime() function
-- [ ] Update icon rendering to use sun/moon based on time (independent of theme)
-- [ ] Test icon variants at different times of day
+- [ ] Extend WEATHER_CODES with day/night icon variants (moon 🌙 for night)
+- [ ] Add is_day to current API request
+- [ ] Update getWeatherCondition() to accept isDay parameter
+- [ ] Use is_day for current weather icon (shows night moon if is_day=false)
+- [ ] Use day icons for 7-day forecast (full day includes both day and night, so use day icon)
+- [ ] Test current weather displays correct icon (day/night), forecast displays day icons
 
 ## Phase 1c: UI Refresh
 - [ ] Remove "Weather" title from header
