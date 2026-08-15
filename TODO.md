@@ -11,6 +11,14 @@
 - If something fails, investigate the actual cause rather than hiding the error.
 - Open-Meteo is the weather data source.
 
+# Working Practice
+
+After completing each phase:
+1. Run/test the application to verify changes
+2. Mark completed items with [x]
+3. Mark phase as ✅ in the Completed section (move it out of active phases)
+4. This ensures continuous visibility of progress and prevents regressions
+
 # Project ToDo
 
 ## Completed
