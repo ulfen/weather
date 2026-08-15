@@ -33,21 +33,27 @@
   - [x] Use day icons for 7-day forecast (full day includes both day and night, so use day icon)
   - [x] Verified: No errors, icons update based on is_day parameter
 
-## Phase 1c: Foundation & Code Polish
-- [ ] Remove "Weather" h1 title from header (already in todo)
-- [ ] Convert search UI from \<div\> to \<form\> (semantic + better accessibility)
-- [ ] Refactor fetchWeather() → separate data layer from rendering
-  - [ ] Create parseWeatherData(apiResponse) function
-  - [ ] Create renderCurrentWeather(data) function
-  - [ ] Keep fetchWeather() as orchestrator only
-- [ ] Refactor searchLocation() into steps (validate → fetch → update → render)
-- [ ] Simplify renderForecast() with template literals or cleaner DOM builder
-- [ ] Add data validation layer — check API responses have required fields
-- [ ] Improve error messaging (display actual error context, not generic text)
-- [ ] Document WEATHER_LOCATION data structure (JSDoc or inline comment)
-- [ ] Test error cases: no results, network failure, missing fields
+## Phase 1c: Simple Visual & Documentation
+- [ ] Remove "Weather" h1 title from header
+- [ ] Convert search UI from \<div\> to \<form\> (semantic + accessibility)
 - [ ] Update CSS .weather-card from fixed width to max-width
-- [ ] Add function comments describing inputs/outputs
+- [ ] Add JSDoc comments for all functions (inputs/outputs)
+- [ ] Document WEATHER_LOCATION data structure
+
+## Phase 1d: Data Validation & Parsing
+- [ ] Create parseWeatherData(apiResponse) function (extracts transformation logic)
+- [ ] Add data validation layer (check required fields exist)
+- [ ] Improve error messaging (preserve actual error context)
+- [ ] Test error cases: no results, network failure, missing fields
+
+## Phase 1e: Render & Orchestration
+- [ ] Create renderCurrentWeather(data) function
+- [ ] Refactor fetchWeather() to use parseWeatherData() and renderCurrentWeather()
+- [ ] Keep fetchWeather() as clean orchestrator only
+
+## Phase 1f: Forecast & Search Cleanup
+- [ ] Simplify renderForecast() with template literals or cleaner DOM builder
+- [ ] Refactor searchLocation() into logical steps (validate → fetch → parse → update → render)
 
 ## Phase 2a: Horizontal Hourly Timeline
 - [ ] Extend Open-Meteo API request to include hourly data
