@@ -40,13 +40,12 @@ After completing each phase:
   - [x] Use is_day for current weather icon (shows night moon if is_day=false)
   - [x] Use day icons for 7-day forecast (full day includes both day and night, so use day icon)
   - [x] Verified: No errors, icons update based on is_day parameter
-
-## Phase 1c: Simple Visual & Documentation
-- [ ] Remove "Weather" h1 title from header
-- [ ] Convert search UI from \<div\> to \<form\> (semantic + accessibility)
-- [ ] Update CSS .weather-card from fixed width to max-width
-- [ ] Add JSDoc comments for all functions (inputs/outputs)
-- [ ] Document WEATHER_LOCATION data structure
+- **Phase 1c: Simple Visual & Documentation** ✅
+  - [x] Remove "Weather" h1 title from header
+  - [x] Convert search UI from \<div\> to \<form\> (semantic + accessibility)
+  - [x] Update CSS .weather-card from fixed width to max-width
+  - [x] Add JSDoc comments for all functions (inputs/outputs)
+  - [x] Document WEATHER_LOCATION data structure
 
 ## Phase 1d: Data Validation & Parsing
 - [ ] Create parseWeatherData(apiResponse) function (extracts transformation logic)
