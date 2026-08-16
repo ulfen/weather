@@ -83,6 +83,35 @@ function getWeatherCondition(code, isDay = true) {
 }
 
 /**
+ * Builds the Open-Meteo forecast API URL for a given latitude and longitude.
+ * @param {number} latitude - Geographic latitude
+ * @param {number} longitude - Geographic longitude
+ * @returns {string} Fully formed forecast API URL
+ */
+function buildWeatherUrl(latitude, longitude) {
+  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+}
+
+/**
+ * Builds the Open-Meteo geocoding search API URL for a location name.
+ * @param {string} query - Location name or search query
+ * @returns {string} Fully formed Geocoding API URL
+ */
+function buildGeocodingUrl(query) {
+  return `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
+}
+
+/**
+ * Formats an ISO date string (YYYY-MM-DD) into a short weekday string (e.g., "Mon").
+ * @param {string} dateStr - ISO date string
+ * @returns {string} Short localized weekday
+ */
+function formatWeekday(dateStr) {
+  const date = new Date(`${dateStr}T00:00:00`);
+  return date.toLocaleDateString("en-US", { weekday: "short" });
+}
+
+/**
  * Displays an error message in the search error element.
  * @param {string} message - Error message to display
  */
@@ -100,7 +129,35 @@ function clearSearchError() {
 }
 
 /**
- * Searches for a location using Open-Meteo geocoding API and fetches weather.
+ * Fetches geographic coordinates and normalized location details for a search query.
+ * @param {string} query - Location name to search
+ * @returns {Promise<object|null>} Location object { city, country, latitude, longitude } or null if not found
+ * @throws {Error} If the network request fails
+ */
+async function fetchCoordinates(query) {
+  const url = buildGeocodingUrl(query);
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Geocoding request failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data.results || data.results.length === 0) {
+    return null;
+  }
+
+  const result = data.results[0];
+  return {
+    city: result.name,
+    country: result.country || "",
+    latitude: result.latitude,
+    longitude: result.longitude,
+  };
+}
+
+/**
+ * Searches for a location and updates the weather display.
  */
 async function searchLocation() {
   const query = locationInputEl.value.trim();
@@ -108,28 +165,14 @@ async function searchLocation() {
 
   clearSearchError();
   try {
-    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`;
-    const response = await fetch(url);
+    const location = await fetchCoordinates(query);
 
-    if (!response.ok) {
-      throw new Error(`Geocoding request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!data.results || data.results.length === 0) {
+    if (!location) {
       showSearchError(`Location "${query}" not found`);
       return;
     }
 
-    const result = data.results[0];
-    WEATHER_LOCATION = {
-      city: result.name,
-      country: result.country || "",
-      latitude: result.latitude,
-      longitude: result.longitude,
-    };
-
+    WEATHER_LOCATION = location;
     locationInputEl.value = "";
     fetchWeather();
   } catch (error) {
@@ -216,37 +259,28 @@ function renderCurrentWeather(location, weather) {
 }
 
 /**
- * Renders the 7-day forecast to the DOM.
+ * Renders the 7-day forecast to the DOM using template literals.
  * @param {array} days - Array of daily forecast objects with date, code, max, min
  */
 function renderForecast(days) {
-  forecastRowEl.innerHTML = "";
+  if (!days || days.length === 0) {
+    forecastRowEl.innerHTML = '<div class="forecast-item forecast-error">Forecast unavailable</div>';
+    return;
+  }
 
-  days.forEach((day) => {
-    const item = document.createElement("div");
-    item.className = "forecast-item";
-
-    const dayLabel = document.createElement("div");
-    dayLabel.className = "forecast-day";
-    const date = new Date(`${day.date}T00:00:00`);
-    dayLabel.textContent = date.toLocaleDateString("en-US", { weekday: "short" });
-
-    const icon = document.createElement("div");
-    icon.className = "forecast-icon";
-    // Use day icons for forecast (full day includes both day and night)
-    const condition = getWeatherCondition(day.code, true);
-    icon.textContent = condition.icon;
-    icon.setAttribute("aria-label", condition.label);
-
-    const temp = document.createElement("div");
-    temp.className = "forecast-temp";
-    temp.textContent = `${day.max}° / ${day.min}°`;
-
-    item.appendChild(dayLabel);
-    item.appendChild(icon);
-    item.appendChild(temp);
-    forecastRowEl.appendChild(item);
-  });
+  forecastRowEl.innerHTML = days
+    .map((day) => {
+      const condition = getWeatherCondition(day.code, true);
+      const dayLabel = formatWeekday(day.date);
+      return `
+        <div class="forecast-item">
+          <div class="forecast-day">${dayLabel}</div>
+          <div class="forecast-icon" aria-label="${condition.label}">${condition.icon}</div>
+          <div class="forecast-temp">${day.max}° / ${day.min}°</div>
+        </div>
+      `.trim();
+    })
+    .join("");
 }
 
 /**
@@ -254,7 +288,7 @@ function renderForecast(days) {
  * Orchestrates fetching, parsing, and rendering, or displays error state.
  */
 async function fetchWeather() {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LOCATION.latitude}&longitude=${WEATHER_LOCATION.longitude}&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+  const url = buildWeatherUrl(WEATHER_LOCATION.latitude, WEATHER_LOCATION.longitude);
 
   try {
     const response = await fetch(url);

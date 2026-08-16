@@ -49,16 +49,16 @@ After completing each phase:
   - [x] Add data validation layer (check required fields exist)
   - [x] Improve error messaging (preserve actual error context)
   - [x] Test error cases: no results, network failure, missing fields
-  - [x] Verified: Unit test suite (18 assertions) passed covering roundings, icons, structures, and missing field errors
 - **Phase 1e: Render & Orchestration** ✅
   - [x] Create renderCurrentWeather(location, weather) function
   - [x] Refactor fetchWeather() to use parseWeatherData() and renderCurrentWeather()
   - [x] Keep fetchWeather() as clean orchestrator only
   - [x] Verified: Clean data pipeline established and tested
-
-## Phase 1f: Forecast & Search Cleanup
-- [ ] Simplify renderForecast() with template literals or cleaner DOM builder
-- [ ] Refactor searchLocation() into logical steps (validate → fetch → parse → update → render)
+- **Phase 1f: Forecast & Search Cleanup** ✅
+  - [x] Simplify renderForecast() with template literals or cleaner DOM builder
+  - [x] Refactor searchLocation() into logical steps (validate → fetch → parse → update → render)
+  - [x] Extract modular URL builders (buildWeatherUrl, buildGeocodingUrl) and date formatters (formatWeekday)
+  - [x] Verified: Unit tests passed for template literals, URL building, weekday formatting, and search logic
 
 ## Phase 2a: Horizontal Hourly Timeline
 - [ ] Extend Open-Meteo API request to include hourly data
