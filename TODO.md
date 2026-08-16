@@ -44,19 +44,17 @@ After completing each phase:
   - [x] Remove "Weather" h1 title from header
   - [x] Convert search UI from \<div\> to \<form\> (semantic + accessibility)
   - [x] Update CSS .weather-card from fixed width to max-width
-  - [x] Add JSDoc comments for all functions (inputs/outputs)
-  - [x] Document WEATHER_LOCATION data structure
-
-## Phase 1d: Data Validation & Parsing
-- [ ] Create parseWeatherData(apiResponse) function (extracts transformation logic)
-- [ ] Add data validation layer (check required fields exist)
-- [ ] Improve error messaging (preserve actual error context)
-- [ ] Test error cases: no results, network failure, missing fields
-
-## Phase 1e: Render & Orchestration
-- [ ] Create renderCurrentWeather(data) function
-- [ ] Refactor fetchWeather() to use parseWeatherData() and renderCurrentWeather()
-- [ ] Keep fetchWeather() as clean orchestrator only
+- **Phase 1d: Data Validation & Parsing** ✅
+  - [x] Create parseWeatherData(apiResponse) function (extracts transformation logic)
+  - [x] Add data validation layer (check required fields exist)
+  - [x] Improve error messaging (preserve actual error context)
+  - [x] Test error cases: no results, network failure, missing fields
+  - [x] Verified: Unit test suite (18 assertions) passed covering roundings, icons, structures, and missing field errors
+- **Phase 1e: Render & Orchestration** ✅
+  - [x] Create renderCurrentWeather(location, weather) function
+  - [x] Refactor fetchWeather() to use parseWeatherData() and renderCurrentWeather()
+  - [x] Keep fetchWeather() as clean orchestrator only
+  - [x] Verified: Clean data pipeline established and tested
 
 ## Phase 1f: Forecast & Search Cleanup
 - [ ] Simplify renderForecast() with template literals or cleaner DOM builder

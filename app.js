@@ -139,6 +139,83 @@ async function searchLocation() {
 }
 
 /**
+ * Validates and transforms the Open-Meteo API response into a structured weather data model.
+ * @param {object} data - Raw JSON response from Open-Meteo API
+ * @returns {object} Parsed weather object with current, todayRange, and forecast properties
+ * @throws {Error} If required data fields are missing or malformed
+ */
+function parseWeatherData(data) {
+  if (!data || typeof data !== "object") {
+    throw new Error("Invalid weather data: response is empty or not an object");
+  }
+
+  if (
+    !data.current ||
+    typeof data.current.temperature_2m !== "number" ||
+    typeof data.current.weather_code !== "number"
+  ) {
+    throw new Error("Invalid weather data: missing or invalid current weather fields");
+  }
+
+  if (
+    !data.daily ||
+    !Array.isArray(data.daily.time) ||
+    !Array.isArray(data.daily.weather_code) ||
+    !Array.isArray(data.daily.temperature_2m_max) ||
+    !Array.isArray(data.daily.temperature_2m_min)
+  ) {
+    throw new Error("Invalid weather data: missing or invalid daily forecast arrays");
+  }
+
+  const isDay = data.current.is_day === 1 || data.current.is_day === true;
+  const condition = getWeatherCondition(data.current.weather_code, isDay);
+  const currentTemp = Math.round(data.current.temperature_2m);
+
+  const forecast = data.daily.time.map((date, index) => ({
+    date,
+    code: data.daily.weather_code[index],
+    max: Math.round(data.daily.temperature_2m_max[index]),
+    min: Math.round(data.daily.temperature_2m_min[index]),
+  }));
+
+  const todayRange = forecast.length > 0
+    ? { max: forecast[0].max, min: forecast[0].min }
+    : null;
+
+  return {
+    current: {
+      temperature: currentTemp,
+      condition: condition.label,
+      icon: condition.icon,
+      isDay,
+    },
+    todayRange,
+    forecast,
+  };
+}
+
+/**
+ * Renders the current weather and today's temperature range to the DOM.
+ * @param {object} location - Location object with city and country
+ * @param {object} weather - Parsed weather data containing current and todayRange
+ */
+function renderCurrentWeather(location, weather) {
+  locationEl.textContent = location.country
+    ? `${location.city}, ${location.country}`
+    : location.city;
+  temperatureEl.textContent = `${weather.current.temperature}°C`;
+  conditionEl.textContent = weather.current.condition;
+  weatherIconEl.textContent = weather.current.icon;
+  weatherIconEl.setAttribute("aria-label", `${weather.current.condition} weather`);
+
+  if (weather.todayRange) {
+    temperatureRangeEl.textContent = `${weather.todayRange.max}° / ${weather.todayRange.min}°`;
+  } else {
+    temperatureRangeEl.textContent = "--° / --°";
+  }
+}
+
+/**
  * Renders the 7-day forecast to the DOM.
  * @param {array} days - Array of daily forecast objects with date, code, max, min
  */
@@ -174,7 +251,7 @@ function renderForecast(days) {
 
 /**
  * Fetches weather data from Open-Meteo API for current location.
- * Updates DOM with current weather and forecast, or displays error state.
+ * Orchestrates fetching, parsing, and rendering, or displays error state.
  */
 async function fetchWeather() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LOCATION.latitude}&longitude=${WEATHER_LOCATION.longitude}&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
@@ -187,38 +264,10 @@ async function fetchWeather() {
     }
 
     const data = await response.json();
+    const weather = parseWeatherData(data);
 
-    if (!data.current || !data.daily) {
-      throw new Error("Open-Meteo response missing weather data");
-    }
-
-    const currentData = data.current;
-    const dailyData = data.daily;
-    const isDay = currentData.is_day; // true = day, false = night
-    const weather = getWeatherCondition(currentData.weather_code, isDay);
-    const currentTemp = Math.round(currentData.temperature_2m);
-
-    const forecastDays = dailyData.time.map((date, index) => ({
-      date,
-      code: dailyData.weather_code[index],
-      max: Math.round(dailyData.temperature_2m_max[index]),
-      min: Math.round(dailyData.temperature_2m_min[index]),
-    }));
-
-    locationEl.textContent = `${WEATHER_LOCATION.city}, ${WEATHER_LOCATION.country}`;
-    temperatureEl.textContent = `${currentTemp}°C`;
-    conditionEl.textContent = weather.label;
-    weatherIconEl.textContent = weather.icon;
-    weatherIconEl.setAttribute("aria-label", `${weather.label} weather`);
-
-    const firstDay = forecastDays[0];
-    if (firstDay) {
-      temperatureRangeEl.textContent = `${firstDay.max}° / ${firstDay.min}°`;
-    } else {
-      temperatureRangeEl.textContent = "--° / --°";
-    }
-
-    renderForecast(forecastDays);
+    renderCurrentWeather(WEATHER_LOCATION, weather);
+    renderForecast(weather.forecast);
   } catch (error) {
     console.error("Weather fetch failed:", error);
     setWeatherFailure();
