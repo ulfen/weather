@@ -59,13 +59,12 @@ After completing each phase:
   - [x] Refactor searchLocation() into logical steps (validate → fetch → parse → update → render)
   - [x] Extract modular URL builders (buildWeatherUrl, buildGeocodingUrl) and date formatters (formatWeekday)
   - [x] Verified: Unit tests passed for template literals, URL building, weekday formatting, and search logic
-
-## Phase 2a: Horizontal Hourly Timeline
-- [ ] Extend Open-Meteo API request to include hourly data
-- [ ] Implement renderHourlyForecast() function
-- [ ] Create horizontal scrollable container for hourly cards
-- [ ] Display time, icon, and temperature for each hour (3-6 hour intervals)
-- [ ] Test horizontal scroll
+- **Phase 2a: Horizontal Hourly Timeline** ✅
+  - [x] Extend Open-Meteo API request to include hourly data
+  - [x] Implement renderHourlyForecast() function
+  - [x] Create horizontal scrollable container for hourly cards
+  - [x] Display time (24-hour format), icon (day/night aware), and temperature for each hour (3-hour intervals)
+  - [x] Verified: Unit and parsing tests passed; 24-hour formatting ("15:00") and data pipeline verified
 
 ## Phase 2b: Vertical 7-Day Forecast
 - [ ] Refactor forecast layout from horizontal flex-wrap to vertical stack

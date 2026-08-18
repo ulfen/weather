@@ -19,6 +19,7 @@ const temperatureEl = document.getElementById("temperature");
 const conditionEl = document.getElementById("condition");
 const temperatureRangeEl = document.getElementById("temperature-range");
 const weatherIconEl = document.getElementById("weather-icon");
+const hourlyRowEl = document.getElementById("hourly-row");
 const forecastRowEl = document.getElementById("forecast-row");
 const locationInputEl = document.getElementById("location-input");
 const searchButtonEl = document.getElementById("search-button");
@@ -65,6 +66,7 @@ function setWeatherFailure() {
   temperatureRangeEl.textContent = "--° / --°";
   weatherIconEl.textContent = "⚠️";
   weatherIconEl.setAttribute("aria-label", "Weather unavailable");
+  hourlyRowEl.innerHTML = '<div class="hourly-item hourly-error">Hourly forecast unavailable</div>';
   forecastRowEl.innerHTML = '<div class="forecast-item forecast-error">Forecast unavailable</div>';
 }
 
@@ -89,7 +91,7 @@ function getWeatherCondition(code, isDay = true) {
  * @returns {string} Fully formed forecast API URL
  */
 function buildWeatherUrl(latitude, longitude) {
-  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
 }
 
 /**
@@ -109,6 +111,19 @@ function buildGeocodingUrl(query) {
 function formatWeekday(dateStr) {
   const date = new Date(`${dateStr}T00:00:00`);
   return date.toLocaleDateString("en-US", { weekday: "short" });
+}
+
+/**
+ * Formats an ISO date-time string (YYYY-MM-DDTHH:MM) into a 24-hour time string (e.g., "15:00").
+ * @param {string} timeStr - ISO date-time string
+ * @returns {string} 24-hour formatted time (HH:MM)
+ */
+function formatHour(timeStr) {
+  if (typeof timeStr === "string" && timeStr.includes("T")) {
+    return timeStr.split("T")[1].slice(0, 5);
+  }
+  const date = new Date(timeStr);
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
 /**
@@ -201,6 +216,16 @@ function parseWeatherData(data) {
   }
 
   if (
+    !data.hourly ||
+    !Array.isArray(data.hourly.time) ||
+    !Array.isArray(data.hourly.weather_code) ||
+    !Array.isArray(data.hourly.temperature_2m) ||
+    !Array.isArray(data.hourly.is_day)
+  ) {
+    throw new Error("Invalid weather data: missing or invalid hourly forecast arrays");
+  }
+
+  if (
     !data.daily ||
     !Array.isArray(data.daily.time) ||
     !Array.isArray(data.daily.weather_code) ||
@@ -213,6 +238,28 @@ function parseWeatherData(data) {
   const isDay = data.current.is_day === 1 || data.current.is_day === true;
   const condition = getWeatherCondition(data.current.weather_code, isDay);
   const currentTemp = Math.round(data.current.temperature_2m);
+
+  const currentTime = data.current && data.current.time ? data.current.time : "";
+  let startIndex = data.hourly.time.findIndex((t) => t >= currentTime.slice(0, 13));
+  if (startIndex === -1) {
+    startIndex = 0;
+  }
+
+  const hourly = [];
+  const intervalHours = 3;
+  const maxIntervals = 8;
+  for (
+    let i = startIndex;
+    i < data.hourly.time.length && hourly.length < maxIntervals;
+    i += intervalHours
+  ) {
+    hourly.push({
+      time: data.hourly.time[i],
+      code: data.hourly.weather_code[i],
+      temperature: Math.round(data.hourly.temperature_2m[i]),
+      isDay: data.hourly.is_day[i] === 1 || data.hourly.is_day[i] === true,
+    });
+  }
 
   const forecast = data.daily.time.map((date, index) => ({
     date,
@@ -233,6 +280,7 @@ function parseWeatherData(data) {
       isDay,
     },
     todayRange,
+    hourly,
     forecast,
   };
 }
@@ -256,6 +304,31 @@ function renderCurrentWeather(location, weather) {
   } else {
     temperatureRangeEl.textContent = "--° / --°";
   }
+}
+
+/**
+ * Renders the hourly timeline forecast to the DOM using template literals.
+ * @param {array} hours - Array of hourly forecast objects with time, code, temperature, isDay
+ */
+function renderHourlyForecast(hours) {
+  if (!hours || hours.length === 0) {
+    hourlyRowEl.innerHTML = '<div class="hourly-item hourly-error">Hourly forecast unavailable</div>';
+    return;
+  }
+
+  hourlyRowEl.innerHTML = hours
+    .map((hour) => {
+      const condition = getWeatherCondition(hour.code, hour.isDay);
+      const timeLabel = formatHour(hour.time);
+      return `
+        <div class="hourly-item">
+          <div class="hourly-time">${timeLabel}</div>
+          <div class="hourly-icon" aria-label="${condition.label}">${condition.icon}</div>
+          <div class="hourly-temp">${hour.temperature}°</div>
+        </div>
+      `.trim();
+    })
+    .join("");
 }
 
 /**
@@ -301,6 +374,7 @@ async function fetchWeather() {
     const weather = parseWeatherData(data);
 
     renderCurrentWeather(WEATHER_LOCATION, weather);
+    renderHourlyForecast(weather.hourly);
     renderForecast(weather.forecast);
   } catch (error) {
     console.error("Weather fetch failed:", error);
