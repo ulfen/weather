@@ -227,40 +227,57 @@ body {
 
 .forecast-row {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .forecast-item {
-  flex: 1 1 42px;
-  min-width: 56px;
-  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--panel);
 }
 
 .forecast-day {
-  font-size: 0.7rem;
-  color: var(--muted);
-  margin-bottom: 6px;
+  flex: 1;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
 }
 
 .forecast-icon {
-  font-size: 1.2rem;
+  flex: 1;
+  text-align: center;
+  font-size: 1.25rem;
   line-height: 1;
 }
 
 .forecast-temp {
-  font-size: 0.75rem;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.forecast-temp-max {
   font-weight: 600;
   color: var(--text);
-  margin-top: 6px;
+}
+
+.forecast-temp-min {
+  font-weight: 500;
+  color: var(--muted);
 }
 
 .forecast-error {
-  flex-basis: 100%;
+  justify-content: center;
+  text-align: center;
   font-size: 0.8rem;
   color: var(--muted);
 }

@@ -342,14 +342,17 @@ function renderForecast(days) {
   }
 
   forecastRowEl.innerHTML = days
-    .map((day) => {
+    .map((day, index) => {
       const condition = getWeatherCondition(day.code, true);
-      const dayLabel = formatWeekday(day.date);
+      const dayLabel = index === 0 ? "Today" : formatWeekday(day.date);
       return `
         <div class="forecast-item">
           <div class="forecast-day">${dayLabel}</div>
           <div class="forecast-icon" aria-label="${condition.label}">${condition.icon}</div>
-          <div class="forecast-temp">${day.max}° / ${day.min}°</div>
+          <div class="forecast-temp">
+            <span class="forecast-temp-max">${day.max}°</span>
+            <span class="forecast-temp-min">${day.min}°</span>
+          </div>
         </div>
       `.trim();
     })

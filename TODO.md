@@ -66,10 +66,11 @@ After completing each phase:
   - [x] Display time (24-hour format), icon (day/night aware), and temperature for each hour (3-hour intervals)
   - [x] Verified: Unit and parsing tests passed; 24-hour formatting ("15:00") and data pipeline verified
 
-## Phase 2b: Vertical 7-Day Forecast
-- [ ] Refactor forecast layout from horizontal flex-wrap to vertical stack
-- [ ] Update card styling for vertical presentation
-- [ ] Ensure day/date, icon, high/low temps display clearly
+- **Phase 2b: Vertical 7-Day Forecast** ✅
+  - [x] Refactor forecast layout from horizontal flex-wrap to vertical stack
+  - [x] Update card styling for vertical presentation
+  - [x] Ensure day/date, icon, high/low temps display clearly
+  - [x] Verified: 7-day forecast renders as a vertical stack with clear row alignment, "Today" label for current day, and high/low temperature styling contrast
 
 ## Phase 2c: Add Precipitation to Forecast
 - [ ] Extend API request to include precipitation_probability
