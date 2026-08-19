@@ -28,11 +28,13 @@ After completing each phase:
 - Single hardcoded latitude/longitude
 - 7-day forecast UI
 - Location search with Open-Meteo geocoding API
+
 - **Phase 1a: Dark/Light Theme (System Preference)** ✅
   - [x] Add dark mode CSS variables with prefers-color-scheme media query
   - [x] Implement theme switching via CSS (no JS needed)
   - [x] Test theme switching in browser DevTools (working ✓)
   - [x] Verified: No errors, theme toggles correctly between light/dark
+
 - **Phase 1b: Day/Night Icons** ✅
   - [x] Extend WEATHER_CODES with day/night icon variants (moon 🌙 for night)
   - [x] Add is_day to current API request
@@ -40,25 +42,30 @@ After completing each phase:
   - [x] Use is_day for current weather icon (shows night moon if is_day=false)
   - [x] Use day icons for 7-day forecast (full day includes both day and night, so use day icon)
   - [x] Verified: No errors, icons update based on is_day parameter
+
 - **Phase 1c: Simple Visual & Documentation** ✅
   - [x] Remove "Weather" h1 title from header
   - [x] Convert search UI from \<div\> to \<form\> (semantic + accessibility)
   - [x] Update CSS .weather-card from fixed width to max-width
+
 - **Phase 1d: Data Validation & Parsing** ✅
   - [x] Create parseWeatherData(apiResponse) function (extracts transformation logic)
   - [x] Add data validation layer (check required fields exist)
   - [x] Improve error messaging (preserve actual error context)
   - [x] Test error cases: no results, network failure, missing fields
+
 - **Phase 1e: Render & Orchestration** ✅
   - [x] Create renderCurrentWeather(location, weather) function
   - [x] Refactor fetchWeather() to use parseWeatherData() and renderCurrentWeather()
   - [x] Keep fetchWeather() as clean orchestrator only
   - [x] Verified: Clean data pipeline established and tested
+
 - **Phase 1f: Forecast & Search Cleanup** ✅
   - [x] Simplify renderForecast() with template literals or cleaner DOM builder
   - [x] Refactor searchLocation() into logical steps (validate → fetch → parse → update → render)
   - [x] Extract modular URL builders (buildWeatherUrl, buildGeocodingUrl) and date formatters (formatWeekday)
   - [x] Verified: Unit tests passed for template literals, URL building, weekday formatting, and search logic
+
 - **Phase 2a: Horizontal Hourly Timeline** ✅
   - [x] Extend Open-Meteo API request to include hourly data
   - [x] Implement renderHourlyForecast() function
@@ -72,12 +79,65 @@ After completing each phase:
   - [x] Ensure day/date, icon, high/low temps display clearly
   - [x] Verified: 7-day forecast renders as a vertical stack with clear row alignment, "Today" label for current day, and high/low temperature styling contrast
 
-## Phase 2c: Add Precipitation to Forecast
-- [ ] Extend API request to include precipitation_probability
-- [ ] Add rain % to hourly forecast cards
-- [ ] Add rain % to daily 7-day cards
+## Phase 2c: Change the 7-day forecast layout
+- [ ] Instead of 7 vertical cards with individual borders
+- [ ] Put all 7 days in a single container
+- [ ] This looks like a single card with a single border
+- [ ] Keep the same information as before
+- [ ] Spacing can be reduced
+- [ ] The individual rows should align vertically with each other
+
+## Phase 2d: Change the hourly forecast layout
+- [ ] Instead of 8 horizontal cards (one for every 3:rd hour) with individual borders
+- [ ] Put the same information in a single container with a single border
+- [ ] Keep the same information and layout as before
+- [ ] Add line graph for the temperature
+- [ ] The line graph is located inbetween the weather icon and the temperature text
+- [ ] The line graph has a sample for each hour
+- [ ] No need to add extra labels to the x-axis (this is the hours from the cards)
+- [ ] No need to add extra labels to the y-axis (this is the temperature from the cards)
+- [ ] The height of the graph area may shrink and grow with the min and max difference in temperature
+- [ ] The height of the graph area is minimal half the height of the earlier individual card area
+- [ ] The height of the graph area is maximal the height of the earlier individual card area
+- [ ] The line is smooth
+- [ ] The line is colored by temperature
+
+## Phase 2e: Change the current weather layout
+- [ ] Do not request and display high and low temperatures for current weather
+- [ ] This area changes to an optional card that is visible when there is something special with the weather
+- [ ] The card is not visible when there is nothing special with the weather
+- [ ] The card consists of a row of text for each significant weather event
+- [ ] Each row can have an appropriate icon before the text
+- [ ] Weather events to look for:
+  - [ ] Heavy rain (more than 5 mm per hour)
+  - [ ] Strong wind (greater than 40 km/h)
+  - [ ] Strong wind gusts (greater than 60 km/h)
+  - [ ] Temperature feels more than 5 degrees different from actual temperature
+  - [ ] Uv index greater than 8
+- [ ] Add a border to the card
+
+## Phase 2f: Add Precipitation to Forecast
+- [ ] Extend API requests to include precipitation and precipitation_probability
+- [ ] Add rain amount (mm) and probability (%) to hourly forecast cards
+- [ ] Add rain amount (mm) and probability (%) to daily 7-day cards
 - [ ] Update card layout to accommodate precipitation data
 - [ ] Test data accuracy and display
+
+## Phase 2g: Precipitation graphic in 7-day forecast
+- [ ] Combine precipitation and precipitation_probability into a single graphic
+- [ ] Use the precipitation graphic in the 7-day forecast instead of the two values
+- [ ] The graphic should indicate both the amount of rain and the probability of rain
+- [ ] Make it appear as a small bar
+- [ ] The height (or width?) of the bar indicates the amount of rain (light, moderate, heavy)
+- [ ] The color/shade/hue (or opacity?) of the bar indicates the probability of rain (low, medium, high)
+
+## Phase 2h: Precipitation graphic in hourly forecast
+- [ ] Add precipitation amount under the temperature in the hourly forecast (if not 0)
+- [ ] Add a bar chart with precipitation amount to the hourly forecast (if not 0)
+- [ ] Combine precipitation and precipitation_probability into the bar chart
+- [ ] The bar chart should indicate both the amount of rain and the probability of rain
+- [ ] The height of the bar indicates the amount of rain (mm)
+- [ ] The color/shade/hue (or opacity?) of the bar indicates the probability of rain (low, medium, high)
 
 ## Phase 3a: Static Favorites List
 - [ ] Hardcode 3-4 favorite locations
