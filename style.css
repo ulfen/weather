@@ -166,23 +166,9 @@ body {
 .hourly-row {
   display: flex;
   overflow-x: auto;
-  gap: 8px;
-  padding-bottom: 6px;
+  padding-bottom: 10px;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
-}
-
-.hourly-row::-webkit-scrollbar {
-  height: 6px;
-}
-
-.hourly-row::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.hourly-row::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
 }
 
 .hourly-item {
@@ -190,9 +176,22 @@ body {
   min-width: 58px;
   padding: 8px 6px;
   border: 1px solid var(--border);
-  border-radius: 10px;
   background: var(--panel);
   text-align: center;
+}
+
+.hourly-item:first-child {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.hourly-item:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.hourly-item:last-child {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 .hourly-time {
