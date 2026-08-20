@@ -175,6 +175,45 @@ After completing each phase:
   - [ ] Ensure high-contrast legibility in both light and dark modes
   - [ ] Final visual polish and cross-resolution alignment check
 
+## Phase 4c: Forecast Improvements
+
+- **Phase 4c-i: Request rain data with 15-minutes intervals from API**
+  - [ ] Request rain data with 15-minutes intervals from API
+  - [ ] Make sure the hourly forecast line graph is using the 15-minutes data
+  - [ ] Keep using the hourly data for the rain mm and probability (%) values (hourly)
+
+- **Phase 4c-ii: Model Selection**
+
+  - [ ] Request temperature and rain data from different models:
+    - [ ] knmi_seamless - Netherlands
+    - [ ] dwd_icon_seamless - Germany
+    - [ ] meteofrance_seamless - France
+    - [ ] ukmo_seamless - UK
+    - [ ] ncep_gfs_seamless - US
+  - [ ] Cache the model data locally to make it possible to switch models without sending a new request to the API
+  - [ ] Create a UI in the top right corner to show the current model
+  - [ ] Add a button to the UI to switch between models
+
+- **Phase 4c-iii: Temperature-Graph Model Fusion**
+  - [ ] Add a 'Model Fusion' alternative to the 'Model Selection' list
+  - [ ] When 'Model Fusion' is selected:
+    - [ ] Display the average temperature from all models in the temperature graph line
+    - [ ] Make a shaded area around the graph indicating the uncertainty (based on the max and min temperature from all models)
+    - [ ] Make the graph area slightly larger to accommodate the shaded area
+  - [ ] When another model is selected:
+    - [ ] Display the temperature from the selected model in the temperature graph line
+    - [ ] Do not display the shaded area
+
+- **Phase 4c-iv: Rain Model Fusion**
+  - [ ] Make the 'Model Fusion' the default option
+  - [ ] When 'Model Fusion' is selected:
+    - [ ] For the text: Display the average rain amount and probability from all models
+    - [ ] For the bar chart:
+      - [ ] Display for each bar the data from the model with the highest probability
+      - [ ] Visualize the agreement between models by reducing the brightness of the bar (lighter = less agreement)
+  - [ ] When another model is selected:
+    - [ ] Display the rain amount and probability from the selected model in the rain bar chart
+
 ## Design Decisions
 - Theme: System preference (prefers-color-scheme) — respects user accessibility and control
 - Icons: Sunrise/sunset times from API (sun ☀️ daytime, moon 🌙 nighttime) — independent of theme
