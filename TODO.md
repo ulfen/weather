@@ -87,20 +87,19 @@ After completing each phase:
   - [x] Maintain vertical column alignment across all rows
   - [x] Verified: 7-day forecast displays inside a single card with subtle row dividers and aligned columns
 
-## Phase 2d: Change the hourly forecast layout
-- [ ] Instead of 8 horizontal cards (one for every 3:rd hour) with individual borders
-- [ ] Put the same information in a single container with a single border
-- [ ] Keep the same information and layout as before
-- [ ] Add line graph for the temperature
-- [ ] The line graph is located inbetween the weather icon and the temperature text
-- [ ] The line graph has a sample for each hour
-- [ ] No need to add extra labels to the x-axis (this is the hours from the cards)
-- [ ] No need to add extra labels to the y-axis (this is the temperature from the cards)
-- [ ] The height of the graph area may shrink and grow with the min and max difference in temperature
-- [ ] The height of the graph area is minimal half the height of the earlier individual card area
-- [ ] The height of the graph area is maximal the height of the earlier individual card area
-- [ ] The line is smooth
-- [ ] The line is colored by temperature
+## Phase 2d: Change the hourly forecast layout & Temperature Graph
+
+- **Phase 2d-i: Single Container for Hourly Forecast**
+  - [ ] Consolidate 8 horizontal cards into a single scrollable container with a single outer border
+  - [ ] Remove individual borders and backgrounds from hourly column items
+  - [ ] Maintain horizontal scrolling, time labels, icons, and temperature values
+  - [ ] Ensure consistent column width and alignment across time, icon, and temperature
+
+- **Phase 2d-ii: 24-Hour Data Pipeline & SVG Line Graph Foundation**
+  - [ ] Extract full 24-hour temperature dataset (1-hour resolution) in `parseWeatherData`
+  - [ ] Add an SVG line graph container situated between the weather icons and temperature text
+  - [ ] Calculate SVG coordinates aligned horizontally with the hourly column positions
+  - [ ] Render initial polyline connecting the temperature points (no extra axis labels needed)
 
 ## Phase 2e: Change the current weather layout
 - [ ] Do not request and display high and low temperatures for current weather
@@ -114,7 +113,7 @@ After completing each phase:
   - [ ] Strong wind gusts (greater than 60 km/h)
   - [ ] Temperature feels more than 5 degrees different from actual temperature
   - [ ] Uv index greater than 8
-- [ ] Add a border to the card
+- [ ] Add a border to the card when visible
 
 ## Phase 2f: Add Precipitation to Forecast
 - [ ] Extend API requests to include precipitation and precipitation_probability
@@ -159,11 +158,22 @@ After completing each phase:
 - [ ] Auto-add newly searched locations to history
 - [ ] Test collapsible menu and star toggle functionality
 
-## Phase 4: Polish, Enhancements & Validation
+## Phase 4a: Polish and Enhancements
 - [ ] API error handling and edge cases
-- [ ] Accessibility audit (keyboard nav, color contrast, aria labels)
-- [ ] Visual refinements and cross-browser testing
-- [ ] (Bonus) Add subtle gradient/lighting shifts based on sunrise/sunset times
+- [ ] Add subtle gradient/lighting shifts based on sunrise/sunset times
+
+## Phase 4b: Temperature Graph Improvements
+
+- **Phase 4b-i: Smooth Curve & Dynamic Height Scaling**
+  - [ ] Implement smooth curve interpolation (e.g., cubic Bezier / Catmull-Rom spline)
+  - [ ] Calculate min and max temperature spread for the 24-hour window
+  - [ ] Scale graph area height dynamically based on temperature delta
+  - [ ] Bound graph height between minimum (half card height) and maximum (full card height)
+
+- **Phase 4b-ii: Temperature-Based Color Styling**
+  - [ ] Color the line graph based on temperature (e.g., SVG linear gradient mapping cool to warm hues)
+  - [ ] Ensure high-contrast legibility in both light and dark modes
+  - [ ] Final visual polish and cross-resolution alignment check
 
 ## Design Decisions
 - Theme: System preference (prefers-color-scheme) — respects user accessibility and control
