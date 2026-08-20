@@ -228,7 +228,14 @@ body {
 .forecast-row {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.forecast-row:empty {
+  display: none;
 }
 
 .forecast-item {
@@ -236,9 +243,10 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--panel);
+}
+
+.forecast-item:not(:last-child) {
+  border-bottom: 1px solid var(--border);
 }
 
 .forecast-day {
@@ -280,4 +288,5 @@ body {
   text-align: center;
   font-size: 0.8rem;
   color: var(--muted);
+  padding: 12px;
 }

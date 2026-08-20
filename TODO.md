@@ -79,13 +79,13 @@ After completing each phase:
   - [x] Ensure day/date, icon, high/low temps display clearly
   - [x] Verified: 7-day forecast renders as a vertical stack with clear row alignment, "Today" label for current day, and high/low temperature styling contrast
 
-## Phase 2c: Change the 7-day forecast layout
-- [ ] Instead of 7 vertical cards with individual borders
-- [ ] Put all 7 days in a single container
-- [ ] This looks like a single card with a single border
-- [ ] Keep the same information as before
-- [ ] Spacing can be reduced
-- [ ] The individual rows should align vertically with each other
+- **Phase 2c: Single-Container 7-Day Forecast** ✅
+  - [x] Consolidate 7 vertical cards with individual borders into a single container
+  - [x] Render as a single card with a single border
+  - [x] Keep all existing information (day label, icon, min/max temperatures)
+  - [x] Remove redundant border-to-border and text-to-border stacking spacing
+  - [x] Maintain vertical column alignment across all rows
+  - [x] Verified: 7-day forecast displays inside a single card with subtle row dividers and aligned columns
 
 ## Phase 2d: Change the hourly forecast layout
 - [ ] Instead of 8 horizontal cards (one for every 3:rd hour) with individual borders
