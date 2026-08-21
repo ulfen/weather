@@ -199,7 +199,7 @@ async function searchLocation() {
 /**
  * Validates and transforms the Open-Meteo API response into a structured weather data model.
  * @param {object} data - Raw JSON response from Open-Meteo API
- * @returns {object} Parsed weather object with current, todayRange, and forecast properties
+ * @returns {object} Parsed weather object with current, todayRange, hourly, hourlyGraph, and forecast properties
  * @throws {Error} If required data fields are missing or malformed
  */
 function parseWeatherData(data) {
@@ -245,19 +245,36 @@ function parseWeatherData(data) {
     startIndex = 0;
   }
 
+  // 1. Extract 24-hour temperature dataset (1-hour resolution) for the SVG line graph
+  const hourlyGraph = [];
+  const maxGraphHours = 24;
+  for (
+    let j = 0;
+    j < maxGraphHours && (startIndex + j) < data.hourly.time.length;
+    j++
+  ) {
+    const idx = startIndex + j;
+    hourlyGraph.push({
+      time: data.hourly.time[idx],
+      temperature: Math.round(data.hourly.temperature_2m[idx]),
+    });
+  }
+
+  // 2. Extract 8-item dataset (3-hour intervals) for the hourly forecast columns
   const hourly = [];
   const intervalHours = 3;
   const maxIntervals = 8;
   for (
-    let i = startIndex;
-    i < data.hourly.time.length && hourly.length < maxIntervals;
-    i += intervalHours
+    let k = 0;
+    k < maxIntervals && (startIndex + k * intervalHours) < data.hourly.time.length;
+    k++
   ) {
+    const idx = startIndex + k * intervalHours;
     hourly.push({
-      time: data.hourly.time[i],
-      code: data.hourly.weather_code[i],
-      temperature: Math.round(data.hourly.temperature_2m[i]),
-      isDay: data.hourly.is_day[i] === 1 || data.hourly.is_day[i] === true,
+      time: data.hourly.time[idx],
+      code: data.hourly.weather_code[idx],
+      temperature: Math.round(data.hourly.temperature_2m[idx]),
+      isDay: data.hourly.is_day[idx] === 1 || data.hourly.is_day[idx] === true,
     });
   }
 
@@ -281,6 +298,7 @@ function parseWeatherData(data) {
     },
     todayRange,
     hourly,
+    hourlyGraph,
     forecast,
   };
 }
@@ -307,16 +325,62 @@ function renderCurrentWeather(location, weather) {
 }
 
 /**
- * Renders the hourly timeline forecast to the DOM using template literals.
- * @param {array} hours - Array of hourly forecast objects with time, code, temperature, isDay
+ * Generates an SVG polyline string representing the temperature curve across the hourly columns.
+ * @param {array} graphData - Array of 1-hour temperature data points
+ * @param {number} numCols - Number of columns (default: 8)
+ * @param {number} colWidth - Width of each column in pixels (default: 58)
+ * @param {number} graphHeight - Height of SVG canvas in pixels (default: 48)
+ * @param {number} pad - Vertical padding in pixels (default: 6)
+ * @returns {string} SVG HTML string
  */
-function renderHourlyForecast(hours) {
+function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 48, pad = 6) {
+  if (!graphData || graphData.length === 0) {
+    return "";
+  }
+
+  const totalWidth = numCols * colWidth;
+  // Span the graph from the center of column 0 to the center of column (numCols - 1)
+  const maxSpanHours = (numCols - 1) * 3; // 21 hours for 8 columns (hours 0 to 21)
+  const pointsData = graphData.slice(0, maxSpanHours + 1);
+
+  const temps = pointsData.map((d) => d.temperature);
+  const minTemp = Math.min(...temps);
+  const maxTemp = Math.max(...temps);
+  const tempDelta = maxTemp - minTemp;
+
+  const startX = colWidth / 2;
+  const hourStepX = colWidth / 3;
+
+  const points = pointsData.map((d, index) => {
+    const x = startX + index * hourStepX;
+    let y = graphHeight / 2;
+    if (tempDelta > 0) {
+      y = pad + ((maxTemp - d.temperature) / tempDelta) * (graphHeight - 2 * pad);
+    }
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  const pointsString = points.join(" ");
+
+  return `
+    <svg class="hourly-graph" viewBox="0 0 ${totalWidth} ${graphHeight}" width="${totalWidth}" height="${graphHeight}" aria-hidden="true">
+      <polyline class="hourly-graph-line" points="${pointsString}" />
+    </svg>
+  `.trim();
+}
+
+/**
+ * Renders the hourly timeline forecast with 8 columns and a 1-hour resolution temperature graph.
+ * @param {array} hours - Array of 8 hourly forecast objects with time, code, temperature, isDay
+ * @param {array} hourlyGraph - Array of 1-hour resolution temperature data points
+ */
+function renderHourlyForecast(hours, hourlyGraph) {
   if (!hours || hours.length === 0) {
     hourlyRowEl.innerHTML = '<div class="hourly-item hourly-error">Hourly forecast unavailable</div>';
     return;
   }
 
-  hourlyRowEl.innerHTML = hours
+  const columnsHtml = hours
     .map((hour) => {
       const condition = getWeatherCondition(hour.code, hour.isDay);
       const timeLabel = formatHour(hour.time);
@@ -324,11 +388,16 @@ function renderHourlyForecast(hours) {
         <div class="hourly-item">
           <div class="hourly-time">${timeLabel}</div>
           <div class="hourly-icon" aria-label="${condition.label}">${condition.icon}</div>
+          <div class="hourly-graph-spacer"></div>
           <div class="hourly-temp">${hour.temperature}°</div>
         </div>
       `.trim();
     })
     .join("");
+
+  const svgHtml = generateHourlySvg(hourlyGraph, hours.length);
+
+  hourlyRowEl.innerHTML = columnsHtml + svgHtml;
 }
 
 /**
@@ -377,7 +446,7 @@ async function fetchWeather() {
     const weather = parseWeatherData(data);
 
     renderCurrentWeather(WEATHER_LOCATION, weather);
-    renderHourlyForecast(weather.hourly);
+    renderHourlyForecast(weather.hourly, weather.hourlyGraph);
     renderForecast(weather.forecast);
   } catch (error) {
     console.error("Weather fetch failed:", error);

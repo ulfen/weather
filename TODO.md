@@ -95,11 +95,12 @@ After completing each phase:
   - [x] Maintain horizontal scrolling, time labels, icons, and temperature values
   - [x] Ensure consistent column width and alignment across time, icon, and temperature
 
-- **Phase 2d-ii: 24-Hour Data Pipeline & SVG Line Graph Foundation**
-  - [ ] Extract full 24-hour temperature dataset (1-hour resolution) in `parseWeatherData`
-  - [ ] Add an SVG line graph container situated between the weather icons and temperature text
-  - [ ] Calculate SVG coordinates aligned horizontally with the hourly column positions
-  - [ ] Render initial polyline connecting the temperature points (no extra axis labels needed)
+- **Phase 2d-ii: 24-Hour Data Pipeline & SVG Line Graph Foundation** ✅
+  - [x] Extract full 24-hour temperature dataset (1-hour resolution) in `parseWeatherData`
+  - [x] Add an SVG line graph container situated between the weather icons and temperature text
+  - [x] Calculate SVG coordinates aligned horizontally with the hourly column positions (8 columns @ 3h intervals with 24-point 1h graph)
+  - [x] Render initial polyline connecting the temperature points (no extra axis labels needed)
+  - [x] Verified: SVG temperature curve connects 24 hourly points with vertices aligning with the 8 column centers, situated directly between icons and temperatures
 
 ## Phase 2e: Change the current weather layout
 - [ ] Do not request and display high and low temperatures for current weather

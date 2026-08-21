@@ -164,58 +164,81 @@ body {
 }
 
 .hourly-row {
+  position: relative;
   display: flex;
   overflow-x: auto;
-  padding-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
 
 .hourly-item {
-  flex: 0 0 auto;
-  min-width: 58px;
-  padding: 8px 6px;
-  border: 1px solid var(--border);
-  background: var(--panel);
+  flex: 0 0 58px;
+  width: 58px;
+  padding: 10px 0;
   text-align: center;
-}
-
-.hourly-item:first-child {
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .hourly-item:not(:last-child) {
   border-right: 1px solid var(--border);
 }
 
-.hourly-item:last-child {
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-}
-
 .hourly-time {
   font-size: 0.7rem;
   color: var(--muted);
+  line-height: 14px;
+  height: 14px;
   margin-bottom: 6px;
 }
 
 .hourly-icon {
   font-size: 1.2rem;
-  line-height: 1;
+  line-height: 20px;
+  height: 20px;
+  margin-bottom: 6px;
+}
+
+.hourly-graph-spacer {
+  height: 48px;
+  width: 100%;
 }
 
 .hourly-temp {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text);
+  line-height: 16px;
+  height: 16px;
   margin-top: 6px;
+}
+
+.hourly-graph {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  width: 464px;
+  height: 48px;
+  pointer-events: none;
+}
+
+.hourly-graph-line {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .hourly-error {
   flex-basis: 100%;
   font-size: 0.8rem;
   color: var(--muted);
+  padding: 12px;
 }
 
 .forecast {
