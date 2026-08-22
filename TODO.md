@@ -87,41 +87,46 @@ After completing each phase:
   - [x] Maintain vertical column alignment across all rows
   - [x] Verified: 7-day forecast displays inside a single card with subtle row dividers and aligned columns
 
-## Phase 2d: Change the hourly forecast layout & Temperature Graph
+- **Phase 2d: Change the hourly forecast layout & Temperature Graph** ✅
 
-- **Phase 2d-i: Single Container for Hourly Forecast** ✅
-  - [x] Consolidate 8 horizontal cards into a single scrollable container with a single outer border
-  - [x] Remove individual borders and backgrounds from hourly column items
-  - [x] Maintain horizontal scrolling, time labels, icons, and temperature values
-  - [x] Ensure consistent column width and alignment across time, icon, and temperature
-
-- **Phase 2d-ii: 24-Hour Data Pipeline & SVG Line Graph Foundation** ✅
-  - [x] Extract full 24-hour temperature dataset (1-hour resolution) in `parseWeatherData`
-  - [x] Add an SVG line graph container situated between the weather icons and temperature text
-  - [x] Calculate SVG coordinates aligned horizontally with the hourly column positions (8 columns @ 3h intervals with 24-point 1h graph)
-  - [x] Render initial polyline connecting the temperature points (no extra axis labels needed)
-  - [x] Verified: SVG temperature curve connects 24 hourly points with vertices aligning with the 8 column centers, situated directly between icons and temperatures
+  - **Phase 2d-i: Single Container for Hourly Forecast** ✅
+    - [x] Consolidate 8 horizontal cards into a single scrollable container with a single outer border
+    - [x] Remove individual borders and backgrounds from hourly column items
+    - [x] Maintain horizontal scrolling, time labels, icons, and temperature values
+    - [x] Ensure consistent column width and alignment across time, icon, and temperature
+  
+  - **Phase 2d-ii: 24-Hour Data Pipeline & SVG Line Graph Foundation** ✅
+    - [x] Extract full 24-hour temperature dataset (1-hour resolution) in `parseWeatherData`
+    - [x] Add an SVG line graph container situated between the weather icons and temperature text
+    - [x] Calculate SVG coordinates aligned horizontally with the hourly column positions (8 columns @ 3h intervals with 24-point 1h graph)
+    - [x] Render initial polyline connecting the temperature points (no extra axis labels needed)
+    - [x] Verified: SVG temperature curve connects 24 hourly points with vertices aligning with the 8 column centers, situated directly between icons and temperatures
 
 ## Phase 2e: Change the current weather layout
-- [ ] Do not request and display high and low temperatures for current weather
-- [ ] This area changes to an optional card that is visible when there is something special with the weather
-- [ ] The card is not visible when there is nothing special with the weather
-- [ ] The card consists of a row of text for each significant weather event
-- [ ] Each row can have an appropriate icon before the text
-- [ ] Weather events to look for:
-  - [ ] Heavy rain (more than 5 mm per hour)
-  - [ ] Strong wind (greater than 40 km/h)
-  - [ ] Strong wind gusts (greater than 60 km/h)
-  - [ ] Temperature feels more than 5 degrees different from actual temperature
-  - [ ] Uv index greater than 8
-- [ ] Add a border to the card when visible
+
+- **Phase 2e-i: Add an optional weather event card**
+  - [ ] Do not display high and low temperatures for current weather
+  - [ ] This area changes to an optional card that is visible when there is something special with the weather
+  - [ ] The card is not visible when there is nothing special with the weather
+  - [ ] The card consists of a row of text for each significant weather event
+  - [ ] Each row can have an appropriate icon before the text
+  - [ ] Weather events to look for:
+    - [ ] Difference between min and max temp is more than 15 degrees: show difference in degrees
+  - [ ] Add a border to the card when visible
+
+- **Phase 2e-ii: Add more events to the event card**
+  - [ ] Heavy rain (more than 5 mm per hour): show sum, hours and probability
+  - [ ] Strong wind (greater than 40 km/h): show speed and direction
+  - [ ] Strong wind gusts (greater than 60 km/h): show max gusts
+  - [ ] Temperature feels (rounded) 5 degrees (or more) different from actual temperature: show rounded difference in degrees
+  - [ ] Uv index greater than 8: show uv index
+  - [ ] visibility less than 1km: show visibility in 100m
 
 ## Phase 2f: Add Precipitation to Forecast
 - [ ] Extend API requests to include precipitation and precipitation_probability
 - [ ] Add rain amount (mm) and probability (%) to hourly forecast cards
 - [ ] Add rain amount (mm) and probability (%) to daily 7-day cards
 - [ ] Update card layout to accommodate precipitation data
-- [ ] Test data accuracy and display
 
 ## Phase 2g: Precipitation graphic in 7-day forecast
 - [ ] Combine precipitation and precipitation_probability into a single graphic
@@ -138,6 +143,17 @@ After completing each phase:
 - [ ] The bar chart should indicate both the amount of rain and the probability of rain
 - [ ] The height of the bar indicates the amount of rain (mm)
 - [ ] The color/shade/hue (or opacity?) of the bar indicates the probability of rain (low, medium, high)
+
+## Phase 2i: Extend the forecast timelines
+- [ ] Extend the hourly forecast to be two days (48 hours)
+- [ ] Extend the hourly forecast such the last printed hour equals the first (51 hours?)
+- [ ] Extend the hourly forecast to contain a past timestamp (-3 hours?)
+- [ ] Make the hourly forecast show now at left after loading (past timestamp not directly visible)
+- [ ] Extend the daily forecast to be two weeks (14 days)
+- [ ] Extend the daily forecast such the last weekday equals the first (15 days)
+- [ ] Extend the daily forecast to include yesterday
+- [ ] Make the daily forecast scrollable (about 8 days visible)
+- [ ] Make the daily forecast show today at top after loading (yesterday not directly visible)
 
 ## Phase 3a: Static Favorites List
 - [ ] Hardcode 3-4 favorite locations
