@@ -148,13 +148,31 @@ body {
   color: var(--muted);
 }
 
-.temperature-range {
+.weather-events {
   margin-top: 22px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
-  font-size: 1.05rem;
+}
+
+.weather-events:empty {
+  display: none;
+}
+
+.weather-event {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text);
+}
+
+.weather-event-icon {
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .hourly-forecast {

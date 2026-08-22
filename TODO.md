@@ -102,17 +102,15 @@ After completing each phase:
     - [x] Render initial polyline connecting the temperature points (no extra axis labels needed)
     - [x] Verified: SVG temperature curve connects 24 hourly points with vertices aligning with the 8 column centers, situated directly between icons and temperatures
 
-## Phase 2e: Change the current weather layout
+- **Phase 2e-i: Optional Weather Event Card** ✅
+  - [x] Do not display high and low temperatures for current weather
+  - [x] Show an optional event card only when notable weather exists
+  - [x] Hide the card when there are no notable weather events
+  - [x] Render one text row with an appropriate icon for each event
+  - [x] Show the rounded daily temperature difference when it is 15 degrees or more
+  - [x] Add a border to the card when visible
 
-- **Phase 2e-i: Add an optional weather event card**
-  - [ ] Do not display high and low temperatures for current weather
-  - [ ] This area changes to an optional card that is visible when there is something special with the weather
-  - [ ] The card is not visible when there is nothing special with the weather
-  - [ ] The card consists of a row of text for each significant weather event
-  - [ ] Each row can have an appropriate icon before the text
-  - [ ] Weather events to look for:
-    - [ ] Difference between min and max temp is more than 15 degrees: show difference in degrees
-  - [ ] Add a border to the card when visible
+## Phase 2e: Change the current weather layout
 
 - **Phase 2e-ii: Add more events to the event card**
   - [ ] Heavy rain (more than 5 mm per hour): show sum, hours and probability

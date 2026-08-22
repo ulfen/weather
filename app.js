@@ -17,7 +17,7 @@ let WEATHER_LOCATION = {
 const locationEl = document.getElementById("location");
 const temperatureEl = document.getElementById("temperature");
 const conditionEl = document.getElementById("condition");
-const temperatureRangeEl = document.getElementById("temperature-range");
+const weatherEventsEl = document.getElementById("weather-events");
 const weatherIconEl = document.getElementById("weather-icon");
 const hourlyRowEl = document.getElementById("hourly-row");
 const forecastRowEl = document.getElementById("forecast-row");
@@ -63,7 +63,7 @@ function setWeatherFailure() {
   locationEl.textContent = `${WEATHER_LOCATION.city}, ${WEATHER_LOCATION.country}`;
   temperatureEl.textContent = "--°C";
   conditionEl.textContent = "Weather unavailable";
-  temperatureRangeEl.textContent = "--° / --°";
+  weatherEventsEl.innerHTML = "";
   weatherIconEl.textContent = "⚠️";
   weatherIconEl.setAttribute("aria-label", "Weather unavailable");
   hourlyRowEl.innerHTML = '<div class="hourly-item hourly-error">Hourly forecast unavailable</div>';
@@ -286,7 +286,11 @@ function parseWeatherData(data) {
   }));
 
   const todayRange = forecast.length > 0
-    ? { max: forecast[0].max, min: forecast[0].min }
+    ? {
+      max: forecast[0].max,
+      min: forecast[0].min,
+      difference: Math.round(data.daily.temperature_2m_max[0] - data.daily.temperature_2m_min[0]),
+    }
     : null;
 
   return {
@@ -304,7 +308,7 @@ function parseWeatherData(data) {
 }
 
 /**
- * Renders the current weather and today's temperature range to the DOM.
+ * Renders the current weather and any notable events to the DOM.
  * @param {object} location - Location object with city and country
  * @param {object} weather - Parsed weather data containing current and todayRange
  */
@@ -317,11 +321,31 @@ function renderCurrentWeather(location, weather) {
   weatherIconEl.textContent = weather.current.icon;
   weatherIconEl.setAttribute("aria-label", `${weather.current.condition} weather`);
 
-  if (weather.todayRange) {
-    temperatureRangeEl.textContent = `${weather.todayRange.max}° / ${weather.todayRange.min}°`;
-  } else {
-    temperatureRangeEl.textContent = "--° / --°";
+  renderWeatherEvents(weather.todayRange);
+}
+
+/**
+ * Renders notable weather events for today's forecast.
+ * @param {object|null} todayRange - Today's rounded maximum and minimum temperatures
+ */
+function renderWeatherEvents(todayRange) {
+  if (!todayRange) {
+    weatherEventsEl.innerHTML = "";
+    return;
   }
+
+  const temperatureDifference = todayRange.difference;
+  if (temperatureDifference < 15) {
+    weatherEventsEl.innerHTML = "";
+    return;
+  }
+
+  weatherEventsEl.innerHTML = `
+    <div class="weather-event">
+      <span class="weather-event-icon" aria-hidden="true">🌡️</span>
+      <span>Temperature range of ${temperatureDifference}° today</span>
+    </div>
+  `.trim();
 }
 
 /**
