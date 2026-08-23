@@ -113,12 +113,15 @@ After completing each phase:
 ## Phase 2e: Change the current weather layout
 
 - **Phase 2e-ii: Add more events to the event card**
-  - [ ] Heavy rain (more than 5 mm per hour): show sum, hours and probability
-  - [ ] Strong wind (greater than 40 km/h): show speed and direction
-  - [ ] Strong wind gusts (greater than 60 km/h): show max gusts
-  - [ ] Temperature feels (rounded) 5 degrees (or more) different from actual temperature: show rounded difference in degrees
-  - [ ] Uv index greater than 8: show uv index
-  - [ ] visibility less than 1km: show visibility in 100m
+  - [ ] Heavy rain today (more than 5 mm per hour today): show sum, hours and probability of rain today
+  - [ ] Continuous rain today (16 hours or more of wain today and 5 mm or more of rain today): show number of forecasted hours of rain
+  - [ ] Continuous rain this week (3 or more consecutive days with 5 mm or more rain. starting today): show number of forecasted days with continuous rain
+  - [ ] Strong wind now (greater than 40 km/h): show speed and direction
+  - [ ] Storm like wind gusts now (greater than 60 km/h): show max gusts
+  - [ ] Temperature now feels (rounded) 5 degrees (or more) different from actual temperature: show rounded difference in degrees
+  - [ ] Uv index 7 or greater today: show uv index
+  - [ ] visibility now less than 1km: show visibility in 100m. less than 100: show less than 100
+  - [ ] Moon phase today above 0.95 and tomorrow below 0.05: show full moon tonight
 
 ## Phase 2f: Add Precipitation to Forecast
 - [ ] Extend API requests to include precipitation and precipitation_probability
