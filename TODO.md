@@ -124,37 +124,41 @@ After completing each phase:
     - [x] Full moon tonight: detect the documented moon phase near 0.5
 
 ## Phase 2f: Add Precipitation to Forecast
-- [ ] Extend API requests to include precipitation and precipitation_probability
-- [ ] Add rain amount (mm) and probability (%) to hourly forecast cards
-- [ ] Add rain amount (mm) and probability (%) to daily 7-day cards
-- [ ] Update card layout to accommodate precipitation data
 
-## Phase 2g: Precipitation graphic in 7-day forecast
-- [ ] Combine precipitation and precipitation_probability into a single graphic
-- [ ] Use the precipitation graphic in the 7-day forecast instead of the two values
-- [ ] The graphic should indicate both the amount of rain and the probability of rain
-- [ ] Make it appear as a small bar
-- [ ] The height (or width?) of the bar indicates the amount of rain (light, moderate, heavy)
-- [ ] The color/shade/hue (or opacity?) of the bar indicates the probability of rain (low, medium, high)
+- **Phase 2f-i: Add Precipitation text to both 7-day and hourly forecasts**
+  - [ ] Extend API requests to include precipitation and precipitation_probability
+  - [ ] Round precipitation to mm if above 1mm. round to 0.1 mm if below 1mm
+  - [ ] Round percentage to 5% if above 10%. round to 1% if below 10%
+  - [ ] Add rounded rain amount (mm) and probability (%) to hourly forecast cards, if both above 0
+  - [ ] Add rounded rain amount (mm) and probability (%) to daily 7-day cards, if both above 0
+  - [ ] Update card layout to accommodate precipitation data: x mm (y%)
 
-## Phase 2h: Precipitation graphic in hourly forecast
-- [ ] Add precipitation amount under the temperature in the hourly forecast (if not 0)
-- [ ] Add a bar chart with precipitation amount to the hourly forecast (if not 0)
-- [ ] Combine precipitation and precipitation_probability into the bar chart
-- [ ] The bar chart should indicate both the amount of rain and the probability of rain
-- [ ] The height of the bar indicates the amount of rain (mm)
-- [ ] The color/shade/hue (or opacity?) of the bar indicates the probability of rain (low, medium, high)
+- **Phase 2f-ii: Precipitation graphic in 7-day forecast**
+  - [ ] Combine precipitation and precipitation_probability into a single graphic
+  - [ ] Use the precipitation graphic in the 7-day forecast
+  - [ ] The graphic should indicate both the amount of rain and the probability of rain
+  - [ ] Make it appear as a small bar of fixed height
+  - [ ] The width of the bar indicates the amount of rain (light, moderate, heavy)
+  - [ ] The shade of the bar indicates the probability of rain (low, medium, high)
 
-## Phase 2i: Extend the forecast timelines
+- **Phase 2f-iii: Precipitation graphic in hourly forecast**
+  - [ ] Add precipitation amount under the temperature in the hourly forecast (if not 0)
+  - [ ] Add a bar chart with precipitation amount to the hourly forecast (if not 0)
+  - [ ] Combine precipitation and precipitation_probability into the bar chart
+  - [ ] The bar chart should indicate both the amount of rain and the probability of rain
+  - [ ] The height of the bar indicates the amount of rain (mm)
+  - [ ] The shade of the bar indicates the probability of rain (low, medium, high)
+
+## Phase 2g: Extend the forecast timelines
 - [ ] Extend the hourly forecast to be two days (48 hours)
-- [ ] Extend the hourly forecast such the last printed hour equals the first (51 hours?)
+- [ ] Extend the hourly forecast such the last printed hour equals the first (+3 hours?)
 - [ ] Extend the hourly forecast to contain a past timestamp (-3 hours?)
-- [ ] Make the hourly forecast show now at left after loading (past timestamp not directly visible)
+- [ ] If possible, make the hourly forecast show now at left after loading (past timestamp not directly visible)
 - [ ] Extend the daily forecast to be two weeks (14 days)
-- [ ] Extend the daily forecast such the last weekday equals the first (15 days)
-- [ ] Extend the daily forecast to include yesterday
-- [ ] Make the daily forecast scrollable (about 8 days visible)
-- [ ] Make the daily forecast show today at top after loading (yesterday not directly visible)
+- [ ] Extend the daily forecast such the last weekday equals the first (+1 day?)
+- [ ] Extend the daily forecast to include yesterday (-1 day?)
+- [ ] Make the daily forecast scrollable (about 8 days visible at the same time)
+- [ ] If possible, make the daily forecast show today at top after loading (yesterday not directly visible)
 
 ## Phase 3a: Static Favorites List
 - [ ] Hardcode 3-4 favorite locations
