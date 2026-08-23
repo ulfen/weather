@@ -125,13 +125,13 @@ After completing each phase:
 
 ## Phase 2f: Add Precipitation to Forecast
 
-- **Phase 2f-i: Add Precipitation text to both 7-day and hourly forecasts**
-  - [ ] Extend API requests to include precipitation and precipitation_probability
-  - [ ] Round precipitation to mm if above 1mm. round to 0.1 mm if below 1mm
-  - [ ] Round percentage to 5% if above 10%. round to 1% if below 10%
-  - [ ] Add rounded rain amount (mm) and probability (%) to hourly forecast cards, if both above 0
-  - [ ] Add rounded rain amount (mm) and probability (%) to daily 7-day cards, if both above 0
-  - [ ] Update card layout to accommodate precipitation data: x mm (y%)
+- **Phase 2f-i: Add Precipitation text to both 7-day and hourly forecasts** ✅
+  - [x] Extend API requests to include precipitation and precipitation_probability
+  - [x] Round precipitation to mm if above 1mm. round to 0.1 mm if below 1mm
+  - [x] Round percentage to 5% if above 10%. round to 1% if below 10%
+  - [x] Add rounded rain amount (mm) and probability (%) to hourly forecast cards, if both above 0
+  - [x] Add rounded rain amount (mm) and probability (%) to daily 7-day cards, if both above 0
+  - [x] Update card layout to accommodate precipitation data: x mm (y%)
 
 - **Phase 2f-ii: Precipitation graphic in 7-day forecast**
   - [ ] Combine precipitation and precipitation_probability into a single graphic

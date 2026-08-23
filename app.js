@@ -127,6 +127,47 @@ function formatHour(timeStr) {
 }
 
 /**
+ * Formats precipitation amount and probability into "x mm (y%)" string if both are above 0.
+ * @param {number} precipitation - Precipitation amount in mm
+ * @param {number} probability - Precipitation probability percentage (0-100)
+ * @returns {string} Formatted precipitation string or empty string
+ */
+function formatPrecipitation(precipitation, probability) {
+  if (
+    typeof precipitation !== "number" ||
+    typeof probability !== "number" ||
+    precipitation <= 0 ||
+    probability <= 0
+  ) {
+    return "";
+  }
+
+  let amountStr = "";
+  if (precipitation > 1) {
+    const rounded = Math.round(precipitation);
+    if (rounded <= 0) return "";
+    amountStr = `${rounded}mm`;
+  } else {
+    const rounded = Math.round(precipitation * 10) / 10;
+    if (rounded <= 0) return "";
+    amountStr = `${rounded.toFixed(1)}mm`;
+  }
+
+  let probStr = "";
+  if (probability > 10) {
+    const rounded = Math.round(probability / 5) * 5;
+    if (rounded <= 0) return "";
+    probStr = `${rounded}%`;
+  } else {
+    const rounded = Math.round(probability);
+    if (rounded <= 0) return "";
+    probStr = `${rounded}%`;
+  }
+
+  return `${amountStr}<br>(${probStr})`;
+}
+
+/**
  * Displays an error message in the search error element.
  * @param {string} message - Error message to display
  */
@@ -524,12 +565,14 @@ function renderHourlyForecast(hours, hourlyGraph) {
     .map((hour) => {
       const condition = getWeatherCondition(hour.code, hour.isDay);
       const timeLabel = formatHour(hour.time);
+      const precipText = formatPrecipitation(hour.precipitation, hour.precipitationProbability);
       return `
         <div class="hourly-item">
           <div class="hourly-time">${timeLabel}</div>
           <div class="hourly-icon" aria-label="${condition.label}">${condition.icon}</div>
           <div class="hourly-graph-spacer"></div>
           <div class="hourly-temp">${hour.temperature}°</div>
+          <div class="hourly-precip">${precipText}</div>
         </div>
       `.trim();
     })
@@ -554,10 +597,12 @@ function renderForecast(days) {
     .map((day, index) => {
       const condition = getWeatherCondition(day.code, true);
       const dayLabel = index === 0 ? "Today" : formatWeekday(day.date);
+      const precipText = formatPrecipitation(day.precipitation, day.precipitationProbability);
       return `
         <div class="forecast-item">
           <div class="forecast-day">${dayLabel}</div>
           <div class="forecast-icon" aria-label="${condition.label}">${condition.icon}</div>
+          <div class="forecast-precip">${precipText}</div>
           <div class="forecast-temp">
             <span class="forecast-temp-max">${day.max}°</span>
             <span class="forecast-temp-min">${day.min}°</span>

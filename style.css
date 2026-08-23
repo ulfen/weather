@@ -244,6 +244,15 @@ body {
   margin-top: 6px;
 }
 
+.hourly-precip {
+  font-size: 0.6rem;
+  color: var(--muted);
+  line-height: 12px;
+  min-height: 12px;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
 .hourly-graph {
   position: absolute;
   top: 56px;
@@ -299,7 +308,7 @@ body {
 }
 
 .forecast-day {
-  flex: 1;
+  flex: 1.1;
   text-align: left;
   font-size: 0.85rem;
   font-weight: 500;
@@ -307,14 +316,22 @@ body {
 }
 
 .forecast-icon {
-  flex: 1;
+  flex: 0.7;
   text-align: center;
   font-size: 1.25rem;
   line-height: 1;
 }
 
+.forecast-precip {
+  flex: 1.8;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .forecast-temp {
-  flex: 1;
+  flex: 1.2;
   display: flex;
   align-items: center;
   justify-content: flex-end;
