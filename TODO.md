@@ -102,26 +102,26 @@ After completing each phase:
     - [x] Render initial polyline connecting the temperature points (no extra axis labels needed)
     - [x] Verified: SVG temperature curve connects 24 hourly points with vertices aligning with the 8 column centers, situated directly between icons and temperatures
 
-- **Phase 2e-i: Optional Weather Event Card** ✅
-  - [x] Do not display high and low temperatures for current weather
-  - [x] Show an optional event card only when notable weather exists
-  - [x] Hide the card when there are no notable weather events
-  - [x] Render one text row with an appropriate icon for each event
-  - [x] Show the rounded daily temperature difference when it is 15 degrees or more
-  - [x] Add a border to the card when visible
+- **Phase 2e: Change the current weather layout** ✅
 
-## Phase 2e: Change the current weather layout
-
-- **Phase 2e-ii: Add more events to the event card**
-  - [ ] Heavy rain today (more than 5 mm per hour today): show sum, hours and probability of rain today
-  - [ ] Continuous rain today (16 hours or more of wain today and 5 mm or more of rain today): show number of forecasted hours of rain
-  - [ ] Continuous rain this week (3 or more consecutive days with 5 mm or more rain. starting today): show number of forecasted days with continuous rain
-  - [ ] Strong wind now (greater than 40 km/h): show speed and direction
-  - [ ] Storm like wind gusts now (greater than 60 km/h): show max gusts
-  - [ ] Temperature now feels (rounded) 5 degrees (or more) different from actual temperature: show rounded difference in degrees
-  - [ ] Uv index 7 or greater today: show uv index
-  - [ ] visibility now less than 1km: show visibility in 100m. less than 100: show less than 100
-  - [ ] Moon phase today above 0.95 and tomorrow below 0.05: show full moon tonight
+  - **Phase 2e-i: Optional Weather Event Card** ✅
+    - [x] Do not display high and low temperatures for current weather
+    - [x] Show an optional event card only when notable weather exists
+    - [x] Hide the card when there are no notable weather events
+    - [x] Render one text row with an appropriate icon for each event
+    - [x] Show the rounded daily temperature difference when it is 15 degrees or more
+    - [x] Add a border to the card when visible
+  
+  - **Phase 2e-ii: Expanded Weather Event Card** ✅
+    - [x] Heavy rain today (any hourly precipitation above 5 mm): show daily sum, hours and probability
+    - [x] Rain today (16 or more precipitation hours and 5 mm or more total): show forecasted hours
+    - [x] Rain this week (3 or more consecutive days with 5 mm or more, starting today): show forecasted days
+    - [x] Strong wind now (40 km/h or greater): show speed and direction
+    - [x] Storm-like wind gusts now (60 km/h or greater): show maximum gusts
+    - [x] Temperature now feels (rounded) 5 degrees or more different from actual temperature: show rounded difference
+    - [x] UV index 7 or greater today: show UV index
+    - [x] Visibility now less than 1 km: show visibility in 100 m; less than 100 m shows less than 100 m
+    - [x] Full moon tonight: detect the documented moon phase near 0.5
 
 ## Phase 2f: Add Precipitation to Forecast
 - [ ] Extend API requests to include precipitation and precipitation_probability

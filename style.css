@@ -156,21 +156,30 @@ body {
   display: none;
 }
 
-.weather-event {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
+.weather-events:not(:empty) {
+  padding: 4px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
+}
+
+.weather-event {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 12px;
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text);
 }
 
+.weather-event:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
 .weather-event-icon {
+  flex: 0 0 auto;
   font-size: 1.1rem;
   line-height: 1;
 }

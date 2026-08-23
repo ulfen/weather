@@ -91,7 +91,7 @@ function getWeatherCondition(code, isDay = true) {
  * @returns {string} Fully formed forecast API URL
  */
 function buildWeatherUrl(latitude, longitude) {
-  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=7`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day,apparent_temperature,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,weather_code,is_day,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_hours,precipitation_probability_max,uv_index_max,moon_phase&timezone=auto&forecast_days=7`;
 }
 
 /**
@@ -210,7 +210,11 @@ function parseWeatherData(data) {
   if (
     !data.current ||
     typeof data.current.temperature_2m !== "number" ||
-    typeof data.current.weather_code !== "number"
+    typeof data.current.weather_code !== "number" ||
+    typeof data.current.apparent_temperature !== "number" ||
+    typeof data.current.wind_speed_10m !== "number" ||
+    typeof data.current.wind_direction_10m !== "number" ||
+    typeof data.current.wind_gusts_10m !== "number"
   ) {
     throw new Error("Invalid weather data: missing or invalid current weather fields");
   }
@@ -220,7 +224,10 @@ function parseWeatherData(data) {
     !Array.isArray(data.hourly.time) ||
     !Array.isArray(data.hourly.weather_code) ||
     !Array.isArray(data.hourly.temperature_2m) ||
-    !Array.isArray(data.hourly.is_day)
+    !Array.isArray(data.hourly.is_day) ||
+    !Array.isArray(data.hourly.precipitation) ||
+    !Array.isArray(data.hourly.precipitation_probability) ||
+    !Array.isArray(data.hourly.visibility)
   ) {
     throw new Error("Invalid weather data: missing or invalid hourly forecast arrays");
   }
@@ -230,7 +237,12 @@ function parseWeatherData(data) {
     !Array.isArray(data.daily.time) ||
     !Array.isArray(data.daily.weather_code) ||
     !Array.isArray(data.daily.temperature_2m_max) ||
-    !Array.isArray(data.daily.temperature_2m_min)
+    !Array.isArray(data.daily.temperature_2m_min) ||
+    !Array.isArray(data.daily.precipitation_sum) ||
+    !Array.isArray(data.daily.precipitation_hours) ||
+    !Array.isArray(data.daily.precipitation_probability_max) ||
+    !Array.isArray(data.daily.uv_index_max) ||
+    !Array.isArray(data.daily.moon_phase)
   ) {
     throw new Error("Invalid weather data: missing or invalid daily forecast arrays");
   }
@@ -275,6 +287,9 @@ function parseWeatherData(data) {
       code: data.hourly.weather_code[idx],
       temperature: Math.round(data.hourly.temperature_2m[idx]),
       isDay: data.hourly.is_day[idx] === 1 || data.hourly.is_day[idx] === true,
+      precipitation: data.hourly.precipitation[idx],
+      precipitationProbability: data.hourly.precipitation_probability[idx],
+      visibility: data.hourly.visibility[idx],
     });
   }
 
@@ -283,6 +298,9 @@ function parseWeatherData(data) {
     code: data.daily.weather_code[index],
     max: Math.round(data.daily.temperature_2m_max[index]),
     min: Math.round(data.daily.temperature_2m_min[index]),
+    precipitation: data.daily.precipitation_sum[index],
+    precipitationHours: data.daily.precipitation_hours[index],
+    precipitationProbability: data.daily.precipitation_probability_max[index],
   }));
 
   const todayRange = forecast.length > 0
@@ -290,8 +308,16 @@ function parseWeatherData(data) {
       max: forecast[0].max,
       min: forecast[0].min,
       difference: Math.round(data.daily.temperature_2m_max[0] - data.daily.temperature_2m_min[0]),
+      precipitation: data.daily.precipitation_sum[0],
+      precipitationHours: data.daily.precipitation_hours[0],
+      precipitationProbability: data.daily.precipitation_probability_max[0],
+      uvIndex: data.daily.uv_index_max[0],
+      moonPhase: data.daily.moon_phase[0],
     }
     : null;
+
+  const currentVisibilityIndex = data.hourly.time.findIndex((time) => time === currentTime);
+  const visibilityIndex = currentVisibilityIndex === -1 ? startIndex : currentVisibilityIndex;
 
   return {
     current: {
@@ -299,8 +325,20 @@ function parseWeatherData(data) {
       condition: condition.label,
       icon: condition.icon,
       isDay,
+      apparentTemperature: data.current.apparent_temperature,
+      windSpeed: data.current.wind_speed_10m,
+      windDirection: data.current.wind_direction_10m,
+      windGusts: data.current.wind_gusts_10m,
+      visibility: data.hourly.visibility[visibilityIndex],
     },
     todayRange,
+    todayHourly: data.hourly.time
+      .map((time, index) => ({
+        time,
+        precipitation: data.hourly.precipitation[index],
+        precipitationProbability: data.hourly.precipitation_probability[index],
+      }))
+      .filter((hour) => hour.time.startsWith(data.daily.time[0])),
     hourly,
     hourlyGraph,
     forecast,
@@ -321,31 +359,109 @@ function renderCurrentWeather(location, weather) {
   weatherIconEl.textContent = weather.current.icon;
   weatherIconEl.setAttribute("aria-label", `${weather.current.condition} weather`);
 
-  renderWeatherEvents(weather.todayRange);
+  renderWeatherEvents(weather);
 }
 
 /**
- * Renders notable weather events for today's forecast.
- * @param {object|null} todayRange - Today's rounded maximum and minimum temperatures
+ * Converts a wind direction in degrees to a compass direction.
+ * @param {number} degrees - Wind direction in degrees
+ * @returns {string} Eight-point compass direction
  */
-function renderWeatherEvents(todayRange) {
-  if (!todayRange) {
-    weatherEventsEl.innerHTML = "";
-    return;
+function getCompassDirection(degrees) {
+  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+  return directions[Math.round(degrees / 45) % directions.length];
+}
+
+/**
+ * Builds notable weather events from parsed weather data.
+ * @param {object} weather - Parsed weather data
+ * @returns {object[]} Events with icon and text properties
+ */
+function getWeatherEvents(weather) {
+  const events = [];
+  const { current, todayRange, todayHourly, forecast } = weather;
+
+  if (todayRange && todayRange.difference >= 15) {
+    events.push({ icon: "🌡️", text: `Temperature range of ${todayRange.difference}° today` });
   }
 
-  const temperatureDifference = todayRange.difference;
-  if (temperatureDifference < 15) {
-    weatherEventsEl.innerHTML = "";
-    return;
+  const heavyRain = todayHourly.some((hour) => hour.precipitation > 5);
+  if (heavyRain && todayRange) {
+    events.push({
+      icon: "🌧️",
+      text: `Heavy rain: ${todayRange.precipitation.toFixed(1)} mm, ${todayRange.precipitationHours} hours, ${todayRange.precipitationProbability}% chance`,
+    });
   }
 
-  weatherEventsEl.innerHTML = `
-    <div class="weather-event">
-      <span class="weather-event-icon" aria-hidden="true">🌡️</span>
-      <span>Temperature range of ${temperatureDifference}° today</span>
-    </div>
-  `.trim();
+  if (todayRange && todayRange.precipitationHours >= 16 && todayRange.precipitation >= 5) {
+    events.push({ icon: "🌧️", text: `Rain expected for ${todayRange.precipitationHours} hours today` });
+  }
+
+  let rainyDays = 0;
+  for (const day of forecast) {
+    if (day.precipitation < 5) break;
+    rainyDays += 1;
+  }
+  if (rainyDays >= 3) {
+    events.push({ icon: "🌧️", text: `Rain expected for ${rainyDays} consecutive days` });
+  }
+
+  if (current.windSpeed >= 40) {
+    events.push({
+      icon: "💨",
+      text: `Strong wind: ${Math.round(current.windSpeed)} km/h ${getCompassDirection(current.windDirection)}`,
+    });
+  }
+
+  if (current.windGusts >= 60) {
+    events.push({ icon: "💨", text: `Storm-like gusts up to ${Math.round(current.windGusts)} km/h` });
+  }
+
+  const feelsDifference = Math.round(current.apparentTemperature) - Math.round(current.temperature);
+  if (Math.abs(feelsDifference) >= 5) {
+    const feelsDirection = feelsDifference > 0 ? "warmer" : "colder";
+    events.push({ icon: "🌡️", text: `Feels ${Math.abs(feelsDifference)}° ${feelsDirection} than the actual temperature` });
+  }
+
+  if (todayRange && todayRange.uvIndex >= 7) {
+    events.push({ icon: "☀️", text: `High UV index: ${todayRange.uvIndex}` });
+  }
+
+  if (current.visibility < 1000) {
+    const visibilityText = current.visibility < 100
+      ? "less than 100 m"
+      : `${Math.round(current.visibility / 100) * 100} m`;
+    events.push({ icon: "🌫️", text: `Low visibility: ${visibilityText}` });
+  }
+
+  if (todayRange && Math.abs(todayRange.moonPhase - 0.5) <= 0.03) {
+    events.push({ icon: "🌕", text: "Full moon tonight" });
+  }
+
+  return events;
+}
+
+/**
+ * Renders notable weather events for the current forecast.
+ * @param {object} weather - Parsed weather data
+ */
+function renderWeatherEvents(weather) {
+  weatherEventsEl.replaceChildren();
+  for (const event of getWeatherEvents(weather)) {
+    const row = document.createElement("div");
+    row.className = "weather-event";
+
+    const icon = document.createElement("span");
+    icon.className = "weather-event-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = event.icon;
+
+    const text = document.createElement("span");
+    text.textContent = event.text;
+
+    row.append(icon, text);
+    weatherEventsEl.append(row);
+  }
 }
 
 /**
