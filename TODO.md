@@ -141,13 +141,13 @@ After completing each phase:
   - [ ] The width of the bar indicates the amount of rain (light, moderate, heavy)
   - [ ] The shade of the bar indicates the probability of rain (low, medium, high)
 
-- **Phase 2f-iii: Precipitation graphic in hourly forecast**
-  - [ ] Add precipitation amount under the temperature in the hourly forecast (if not 0)
-  - [ ] Add a bar chart with precipitation amount to the hourly forecast (if not 0)
-  - [ ] Combine precipitation and precipitation_probability into the bar chart
-  - [ ] The bar chart should indicate both the amount of rain and the probability of rain
-  - [ ] The height of the bar indicates the amount of rain (mm)
-  - [ ] The shade of the bar indicates the probability of rain (low, medium, high)
+- **Phase 2f-iii: Precipitation graphic in hourly forecast** ✅
+  - [x] Add precipitation amount under the temperature in the hourly forecast (if not 0)
+  - [x] Add a bar chart with precipitation amount to the hourly forecast (if not 0)
+  - [x] Combine precipitation and precipitation_probability into the bar chart
+  - [x] The bar chart should indicate both the amount of rain and the probability of rain
+  - [x] The height of the bar indicates the amount of rain (mm)
+  - [x] The shade of the bar indicates the probability of rain (low, medium, high)
 
 ## Phase 2g: Extend the forecast timelines
 - [ ] Extend the hourly forecast to be two days (48 hours)

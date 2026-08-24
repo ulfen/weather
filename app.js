@@ -551,6 +551,44 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
 }
 
 /**
+ * Renders an HTML precipitation bar element based on rain amount and probability.
+ * @param {number} precipitation - Precipitation in mm
+ * @param {number} probability - Precipitation probability in % (0-100)
+ * @returns {string} HTML string for the bar container
+ */
+function renderHourlyPrecipBar(precipitation, probability) {
+  if (
+    typeof precipitation !== "number" ||
+    typeof probability !== "number" ||
+    precipitation <= 0 ||
+    probability <= 0
+  ) {
+    return '';
+  }
+
+  // Scale height: 0 to 5 mm maps to 15% - 100% of container height (28px)
+  const maxScale = 5.0;
+  const heightPercent = Math.min(100, Math.max(15, Math.round((precipitation / maxScale) * 100)));
+
+  // Opacity: map probability (0-100) to 0.35 - 1.0
+  const opacity = (0.35 + 0.65 * (Math.min(100, Math.max(0, probability)) / 100)).toFixed(2);
+
+  // Intensity class
+  let intensity = "light";
+  if (precipitation >= 3.0) {
+    intensity = "heavy";
+  } else if (precipitation >= 1.0) {
+    intensity = "moderate";
+  }
+
+  return `
+    <div class="hourly-bar-container">
+      <div class="hourly-precip-bar ${intensity}" style="height: ${heightPercent}%; opacity: ${opacity};" title="${precipitation} mm (${probability}%)"></div>
+    </div>
+  `.trim();
+}
+
+/**
  * Renders the hourly timeline forecast with 8 columns and a 1-hour resolution temperature graph.
  * @param {array} hours - Array of 8 hourly forecast objects with time, code, temperature, isDay
  * @param {array} hourlyGraph - Array of 1-hour resolution temperature data points
@@ -565,6 +603,7 @@ function renderHourlyForecast(hours, hourlyGraph) {
     .map((hour) => {
       const condition = getWeatherCondition(hour.code, hour.isDay);
       const timeLabel = formatHour(hour.time);
+      const precipBar = renderHourlyPrecipBar(hour.precipitation, hour.precipitationProbability);
       const precipText = formatPrecipitation(hour.precipitation, hour.precipitationProbability);
       return `
         <div class="hourly-item">
@@ -572,6 +611,7 @@ function renderHourlyForecast(hours, hourlyGraph) {
           <div class="hourly-icon" aria-label="${condition.label}">${condition.icon}</div>
           <div class="hourly-graph-spacer"></div>
           <div class="hourly-temp">${hour.temperature}°</div>
+          ${precipBar}
           <div class="hourly-precip">${precipText}</div>
         </div>
       `.trim();

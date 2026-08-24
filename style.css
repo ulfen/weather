@@ -244,6 +244,33 @@ body {
   margin-top: 6px;
 }
 
+.hourly-bar-container {
+  width: 100%;
+  height: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.hourly-precip-bar {
+  width: 12px;
+  border-radius: 4px 4px 2px 2px;
+  transition: height 0.3s ease;
+}
+
+.hourly-precip-bar.light {
+  background: linear-gradient(180deg, #38bdf8 0%, #60a5fa 100%);
+}
+
+.hourly-precip-bar.moderate {
+  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.hourly-precip-bar.heavy {
+  background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%);
+}
+
 .hourly-precip {
   font-size: 0.6rem;
   color: var(--muted);
