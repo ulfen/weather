@@ -325,8 +325,8 @@ function parseWeatherData(data) {
     const idx = startIndex + k * intervalHours;
     const precipHours = [];
     for (let offset = 0; offset < intervalHours; offset++) {
-      const hIdx = idx + offset;
-      if (hIdx < data.hourly.time.length) {
+      const hIdx = idx + offset - 1;
+      if (hIdx >= 0 && hIdx < data.hourly.time.length) {
         precipHours.push({
           time: data.hourly.time[hIdx],
           precipitation: data.hourly.precipitation[hIdx],
@@ -570,7 +570,29 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
  */
 function renderHourlyPrecipBars(precipHours) {
   if (!Array.isArray(precipHours) || precipHours.length === 0) {
-    return '<div class="hourly-bar-container"></div>';
+    return '';
+  }
+
+  const numBars = precipHours
+    .reduce((count, hour) => {
+      const precipitation = hour.precipitation;
+      const probability = hour.precipitationProbability;
+
+      if (
+        typeof precipitation !== "number" ||
+        typeof probability !== "number" ||
+        precipitation <= 0 ||
+        probability <= 0
+      ) {
+        return count;
+      }
+      else {
+        return count + 1;
+      }
+    }, 0);
+
+  if (numBars === 0) {
+    return '';
   }
 
   const maxScale = 5.0; // 5 mm or above reaches 100% height
