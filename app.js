@@ -323,6 +323,18 @@ function parseWeatherData(data) {
     k++
   ) {
     const idx = startIndex + k * intervalHours;
+    const precipHours = [];
+    for (let offset = 0; offset < intervalHours; offset++) {
+      const hIdx = idx + offset;
+      if (hIdx < data.hourly.time.length) {
+        precipHours.push({
+          time: data.hourly.time[hIdx],
+          precipitation: data.hourly.precipitation[hIdx],
+          precipitationProbability: data.hourly.precipitation_probability[hIdx],
+        });
+      }
+    }
+
     hourly.push({
       time: data.hourly.time[idx],
       code: data.hourly.weather_code[idx],
@@ -331,6 +343,7 @@ function parseWeatherData(data) {
       precipitation: data.hourly.precipitation[idx],
       precipitationProbability: data.hourly.precipitation_probability[idx],
       visibility: data.hourly.visibility[idx],
+      precipHours,
     });
   }
 
@@ -551,39 +564,55 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
 }
 
 /**
- * Renders an HTML precipitation bar element based on rain amount and probability.
- * @param {number} precipitation - Precipitation in mm
- * @param {number} probability - Precipitation probability in % (0-100)
+ * Renders an HTML precipitation bar container with 3 hourly bars for a timeslot.
+ * @param {array} precipHours - Array of up to 3 1-hour precipitation objects
  * @returns {string} HTML string for the bar container
  */
-function renderHourlyPrecipBar(precipitation, probability) {
-  if (
-    typeof precipitation !== "number" ||
-    typeof probability !== "number" ||
-    precipitation <= 0 ||
-    probability <= 0
-  ) {
-    return '';
+function renderHourlyPrecipBars(precipHours) {
+  if (!Array.isArray(precipHours) || precipHours.length === 0) {
+    return '<div class="hourly-bar-container"></div>';
   }
 
-  // Scale height: 0 to 5 mm maps to 15% - 100% of container height (28px)
-  const maxScale = 5.0;
-  const heightPercent = Math.min(100, Math.max(15, Math.round((precipitation / maxScale) * 100)));
+  const maxScale = 5.0; // 5 mm or above reaches 100% height
 
-  // Opacity: map probability (0-100) to 0.35 - 1.0
-  const opacity = (0.35 + 0.65 * (Math.min(100, Math.max(0, probability)) / 100)).toFixed(2);
+  const barsHtml = precipHours
+    .map((hour) => {
+      const precipitation = hour.precipitation;
+      const probability = hour.precipitationProbability;
 
-  // Intensity class
-  let intensity = "light";
-  if (precipitation >= 3.0) {
-    intensity = "heavy";
-  } else if (precipitation >= 1.0) {
-    intensity = "moderate";
-  }
+      if (
+        typeof precipitation !== "number" ||
+        typeof probability !== "number" ||
+        precipitation <= 0 ||
+        probability <= 0
+      ) {
+        return '<div class="hourly-precip-bar empty" style="height: 0%;" aria-hidden="true"></div>';
+      }
+
+      // Scale height: 0 to 5 mm maps to 15% - 100% of container height (28px)
+      const heightPercent = Math.min(100, Math.max(15, Math.round((precipitation / maxScale) * 100)));
+
+      // Opacity: map probability (0-100) to 0.35 - 1.0
+      const opacity = (0.35 + 0.65 * (Math.min(100, Math.max(0, probability)) / 100)).toFixed(2);
+
+      // Intensity class
+      let intensity = "light";
+      if (precipitation >= 3.0) {
+        intensity = "heavy";
+      } else if (precipitation >= 1.0) {
+        intensity = "moderate";
+      }
+
+      const timeLabel = formatHour(hour.time);
+      const title = `${timeLabel}: ${precipitation}mm (${probability}%)`;
+
+      return `<div class="hourly-precip-bar ${intensity}" style="height: ${heightPercent}%; opacity: ${opacity};" title="${title}"></div>`;
+    })
+    .join("");
 
   return `
     <div class="hourly-bar-container">
-      <div class="hourly-precip-bar ${intensity}" style="height: ${heightPercent}%; opacity: ${opacity};" title="${precipitation} mm (${probability}%)"></div>
+      ${barsHtml}
     </div>
   `.trim();
 }
@@ -603,7 +632,7 @@ function renderHourlyForecast(hours, hourlyGraph) {
     .map((hour) => {
       const condition = getWeatherCondition(hour.code, hour.isDay);
       const timeLabel = formatHour(hour.time);
-      const precipBar = renderHourlyPrecipBar(hour.precipitation, hour.precipitationProbability);
+      const precipBars = renderHourlyPrecipBars(hour.precipHours);
       const precipText = formatPrecipitation(hour.precipitation, hour.precipitationProbability);
       return `
         <div class="hourly-item">
@@ -611,7 +640,7 @@ function renderHourlyForecast(hours, hourlyGraph) {
           <div class="hourly-icon" aria-label="${condition.label}">${condition.icon}</div>
           <div class="hourly-graph-spacer"></div>
           <div class="hourly-temp">${hour.temperature}°</div>
-          ${precipBar}
+          ${precipBars}
           <div class="hourly-precip">${precipText}</div>
         </div>
       `.trim();

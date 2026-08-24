@@ -250,13 +250,18 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  gap: 4px;
   margin-top: 6px;
 }
 
 .hourly-precip-bar {
-  width: 12px;
-  border-radius: 4px 4px 2px 2px;
+  width: 8px;
+  border-radius: 3px 3px 1px 1px;
   transition: height 0.3s ease;
+}
+
+.hourly-precip-bar.empty {
+  visibility: hidden;
 }
 
 .hourly-precip-bar.light {
