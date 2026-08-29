@@ -595,7 +595,7 @@ function renderHourlyPrecipBars(precipHours) {
     return '';
   }
 
-  const maxScale = 5.0; // 5 mm or above reaches 100% height
+  const maxScale = 15.0; // maxScale mm or above reaches 100% height
 
   const barsHtml = precipHours
     .map((hour) => {
@@ -611,17 +611,18 @@ function renderHourlyPrecipBars(precipHours) {
         return '<div class="hourly-precip-bar empty" style="height: 0%;" aria-hidden="true"></div>';
       }
 
-      // Scale height: 0 to 5 mm maps to 15% - 100% of container height (28px)
-      const heightPercent = Math.min(100, Math.max(15, Math.round((precipitation / maxScale) * 100)));
+      // Scale height: 0 to maxScale mm maps to 2% - 100% of container height (28px)
+      const p = Math.min(Math.max(0.0, precipitation / maxScale), 1.0);
+      const heightPercent = Math.min(100, 2 + 75 * Math.log10(1.0 + 20.0 * p));
 
-      // Opacity: map probability (0-100) to 0.35 - 1.0
-      const opacity = (0.35 + 0.65 * (Math.min(100, Math.max(0, probability)) / 100)).toFixed(2);
+      // Opacity: map probability (25-75) to 0.125 - 0.875
+      const opacity = Math.min(Math.max(0.125, 3.0 * probability / 200 - 0.25), 0.875);
 
       // Intensity class
       let intensity = "light";
-      if (precipitation >= 3.0) {
+      if (precipitation >= 7.5) {
         intensity = "heavy";
-      } else if (precipitation >= 1.0) {
+      } else if (precipitation >= 2.5) {
         intensity = "moderate";
       }
 

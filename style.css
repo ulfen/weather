@@ -265,15 +265,15 @@ body {
 }
 
 .hourly-precip-bar.light {
-  background: linear-gradient(180deg, #38bdf8 0%, #60a5fa 100%);
+  background: linear-gradient(180deg, hsl(210, 100%, 60%) 0%, hsl(210, 80%, 40%) 100%);
 }
 
 .hourly-precip-bar.moderate {
-  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(180deg, hsl(250, 100%, 60%) 0%, hsl(250, 75%, 40%) 100%);
 }
 
 .hourly-precip-bar.heavy {
-  background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%);
+  background: linear-gradient(180deg, hsl(270, 100%, 60%) 0%, hsl(270, 80%, 40%) 100%);
 }
 
 .hourly-precip {
