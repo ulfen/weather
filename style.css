@@ -264,16 +264,32 @@ body {
   visibility: hidden;
 }
 
-.hourly-precip-bar.light {
-  background: linear-gradient(180deg, hsl(210, 100%, 60%) 0%, hsl(210, 80%, 40%) 100%);
-}
-
-.hourly-precip-bar.moderate {
-  background: linear-gradient(180deg, hsl(250, 100%, 60%) 0%, hsl(250, 75%, 40%) 100%);
+.hourly-precip-bar.veryheavy {
+  background: linear-gradient(180deg, hsl(300, 100%, 60%) 0%, hsl(300, 80%, 40%) 100%);
 }
 
 .hourly-precip-bar.heavy {
   background: linear-gradient(180deg, hsl(270, 100%, 60%) 0%, hsl(270, 80%, 40%) 100%);
+}
+
+.hourly-precip-bar.moderate {
+  background: linear-gradient(180deg, hsl(240, 100%, 60%) 0%, hsl(240, 75%, 40%) 100%);
+}
+
+.hourly-precip-bar.light {
+  background: linear-gradient(180deg, hsl(220, 100%, 60%) 0%, hsl(220, 80%, 40%) 100%);
+}
+
+.hourly-precip-bar.verylight {
+  background: linear-gradient(180deg, hsl(200, 100%, 60%) 0%, hsl(200, 80%, 40%) 100%);
+}
+
+.hourly-precip-bar.drizzle {
+  background: linear-gradient(180deg, hsl(180, 100%, 60%) 0%, hsl(180, 80%, 40%) 100%);
+}
+
+.hourly-precip-bar.trace {
+  background: linear-gradient(180deg, hsl(150, 100%, 60%) 0%, hsl(150, 80%, 40%) 100%);
 }
 
 .hourly-precip {

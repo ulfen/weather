@@ -619,11 +619,19 @@ function renderHourlyPrecipBars(precipHours) {
       const opacity = Math.min(Math.max(0.125, 3.0 * probability / 200 - 0.25), 0.875);
 
       // Intensity class
-      let intensity = "light";
-      if (precipitation >= 7.5) {
+      let intensity = "trace";
+      if (precipitation >= 15) {
+        intensity = "veryheavy";
+      } else if (precipitation >= 7.5) {
         intensity = "heavy";
       } else if (precipitation >= 2.5) {
         intensity = "moderate";
+      } else if (precipitation >= 1.0) {
+        intensity = "light";
+      } else if (precipitation >= 0.25) {
+        intensity = "verylight";
+      } else if (precipitation >= 0.1) {
+        intensity = "drizzle";
       }
 
       const timeLabel = formatHour(hour.time);
