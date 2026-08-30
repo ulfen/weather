@@ -6,6 +6,8 @@
   --border: #dde5ee;
   --shadow: rgba(15, 23, 42, 0.08);
   --panel: #f8fafc;
+  --hourly-day-bg: rgba(255, 255, 255, 0.4);
+  --hourly-night-bg: rgba(15, 23, 42, 0.05);
 }
 
 /* Dark mode: automatic based on system preference */
@@ -18,6 +20,8 @@
     --border: #3a4555;
     --shadow: rgba(0, 0, 0, 0.3);
     --panel: #1e2839;
+    --hourly-day-bg: rgba(255, 255, 255, 0.035);
+    --hourly-night-bg: rgba(2, 6, 23, 0.32);
   }
 }
 
@@ -209,6 +213,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.hourly-item.is-day {
+  background-color: var(--hourly-day-bg);
+}
+
+.hourly-item.is-night {
+  background-color: var(--hourly-night-bg);
 }
 
 .hourly-item:not(:last-child) {

@@ -708,8 +708,9 @@ function renderHourlyForecast(hours, hourlyGraph) {
       const precipBars = renderHourlyPrecipBars(hour.precipHours);
       const precipText = formatPrecipitation(hour.precipitation, hour.precipitationProbability);
       const currentAttr = hour.isCurrent ? ' data-current="true"' : '';
+      const dayClass = hour.isDay ? 'is-day' : 'is-night';
       return `
-        <div class="hourly-item"${currentAttr}>
+        <div class="hourly-item ${dayClass}"${currentAttr}>
           <div class="hourly-time">${timeLabel}</div>
           <div class="hourly-icon" aria-label="${condition.label}">${condition.icon}</div>
           <div class="hourly-graph-spacer"></div>
