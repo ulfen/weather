@@ -135,17 +135,14 @@ function formatHour(timeStr) {
 function formatPrecipitation(precipitation, probability) {
   if (
     typeof precipitation !== "number" ||
-    typeof probability !== "number" ||
-    precipitation <= 0 ||
-    probability <= 0
+    typeof probability !== "number"
   ) {
     return "";
   }
 
   let amountStr = "";
-  if (precipitation > 1) {
+  if (precipitation > 2.5) {
     const rounded = Math.round(precipitation);
-    if (rounded <= 0) return "";
     amountStr = `${rounded}mm`;
   } else {
     const rounded = Math.round(precipitation * 10) / 10;
@@ -156,11 +153,9 @@ function formatPrecipitation(precipitation, probability) {
   let probStr = "";
   if (probability > 10) {
     const rounded = Math.round(probability / 5) * 5;
-    if (rounded <= 0) return "";
     probStr = `${rounded}%`;
   } else {
     const rounded = Math.round(probability);
-    if (rounded <= 0) return "";
     probStr = `${rounded}%`;
   }
 
@@ -706,7 +701,13 @@ function renderHourlyForecast(hours, hourlyGraph) {
       const condition = getWeatherCondition(hour.code, hour.isDay);
       const timeLabel = formatHour(hour.time);
       const precipBars = renderHourlyPrecipBars(hour.precipHours);
-      const precipText = formatPrecipitation(hour.precipitation, hour.precipitationProbability);
+      const maxPrecip = Array.isArray(hour.precipHours)
+        ? hour.precipHours.reduce((max, h) => Math.max(max, typeof h.precipitation === 'number' ? h.precipitation : 0), 0)
+        : hour.precipitation;
+      const maxProb = Array.isArray(hour.precipHours)
+        ? hour.precipHours.reduce((max, h) => Math.max(max, typeof h.precipitationProbability === 'number' ? h.precipitationProbability : 0), 0)
+        : hour.precipitationProbability;
+      const precipText = formatPrecipitation(maxPrecip, maxProb);
       const currentAttr = hour.isCurrent ? ' data-current="true"' : '';
       const dayClass = hour.isDay ? 'is-day' : 'is-night';
       return `
