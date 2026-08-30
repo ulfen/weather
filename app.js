@@ -91,7 +91,7 @@ function getWeatherCondition(code, isDay = true) {
  * @returns {string} Fully formed forecast API URL
  */
 function buildWeatherUrl(latitude, longitude) {
-  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day,apparent_temperature,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,weather_code,is_day,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_hours,precipitation_probability_max,uv_index_max,moon_phase&timezone=auto&forecast_days=7`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day,apparent_temperature,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,weather_code,is_day,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_hours,precipitation_probability_max,uv_index_max,moon_phase&timezone=auto&past_days=1&forecast_days=16`;
 }
 
 /**
@@ -293,36 +293,51 @@ function parseWeatherData(data) {
   const currentTemp = Math.round(data.current.temperature_2m);
 
   const currentTime = data.current && data.current.time ? data.current.time : "";
-  let startIndex = data.hourly.time.findIndex((t) => t >= currentTime.slice(0, 13));
-  if (startIndex === -1) {
-    startIndex = 0;
+  let currentHourIndex = data.hourly.time.findIndex((t) => t >= currentTime.slice(0, 13));
+  if (currentHourIndex === -1) {
+    currentHourIndex = 0;
   }
 
-  // 1. Extract 24-hour temperature dataset (1-hour resolution) for the SVG line graph
-  const hourlyGraph = [];
-  const maxGraphHours = 24;
-  for (
-    let j = 0;
-    j < maxGraphHours && (startIndex + j) < data.hourly.time.length;
-    j++
-  ) {
-    const idx = startIndex + j;
-    hourlyGraph.push({
-      time: data.hourly.time[idx],
-      temperature: Math.round(data.hourly.temperature_2m[idx]),
+  // Hourly timeline: 1 past slot (-3h) + 17 slots (0h to 48h at 3h intervals)
+  // Last printed hour (+48h) equals the first future hour (0h).
+  const hourly = [];
+  const intervalHours = 3;
+  const pastOffsetHours = 3;
+  const futureHoursSpan = 48; // 0 to 48h (17 slots)
+
+  // 1. Past column (-3 hours)
+  const pastIdx = currentHourIndex - pastOffsetHours;
+  if (pastIdx >= 0 && pastIdx < data.hourly.time.length) {
+    const precipHours = [];
+    for (let offset = 0; offset < intervalHours; offset++) {
+      const hIdx = pastIdx + offset - 1;
+      if (hIdx >= 0 && hIdx < data.hourly.time.length) {
+        precipHours.push({
+          time: data.hourly.time[hIdx],
+          precipitation: data.hourly.precipitation[hIdx],
+          precipitationProbability: data.hourly.precipitation_probability[hIdx],
+        });
+      }
+    }
+    hourly.push({
+      time: data.hourly.time[pastIdx],
+      code: data.hourly.weather_code[pastIdx],
+      temperature: Math.round(data.hourly.temperature_2m[pastIdx]),
+      isDay: data.hourly.is_day[pastIdx] === 1 || data.hourly.is_day[pastIdx] === true,
+      precipitation: data.hourly.precipitation[pastIdx],
+      precipitationProbability: data.hourly.precipitation_probability[pastIdx],
+      visibility: data.hourly.visibility[pastIdx],
+      precipHours,
+      isCurrent: false,
     });
   }
 
-  // 2. Extract 8-item dataset (3-hour intervals) for the hourly forecast columns
-  const hourly = [];
-  const intervalHours = 3;
-  const maxIntervals = 8;
-  for (
-    let k = 0;
-    k < maxIntervals && (startIndex + k * intervalHours) < data.hourly.time.length;
-    k++
-  ) {
-    const idx = startIndex + k * intervalHours;
+  // 2. Future columns (0h, 3h, ..., 48h)
+  const numFutureSlots = Math.floor(futureHoursSpan / intervalHours) + 1; // 17 slots
+  for (let k = 0; k < numFutureSlots; k++) {
+    const idx = currentHourIndex + k * intervalHours;
+    if (idx >= data.hourly.time.length) break;
+
     const precipHours = [];
     for (let offset = 0; offset < intervalHours; offset++) {
       const hIdx = idx + offset - 1;
@@ -344,10 +359,33 @@ function parseWeatherData(data) {
       precipitationProbability: data.hourly.precipitation_probability[idx],
       visibility: data.hourly.visibility[idx],
       precipHours,
+      isCurrent: k === 0,
     });
   }
 
-  const forecast = data.daily.time.map((date, index) => ({
+  // 3. Extract 1-hour resolution temperature dataset for the SVG line graph
+  // Spanning from the first column's hour to the last column's hour
+  const hourlyGraph = [];
+  const graphStartIdx = Math.max(0, currentHourIndex - (pastIdx >= 0 ? pastOffsetHours : 0));
+  const graphEndIdx = Math.min(data.hourly.time.length - 1, currentHourIndex + futureHoursSpan);
+  for (let idx = graphStartIdx; idx <= graphEndIdx; idx++) {
+    hourlyGraph.push({
+      time: data.hourly.time[idx],
+      temperature: Math.round(data.hourly.temperature_2m[idx]),
+    });
+  }
+
+  // Find today's index in daily arrays (typically index 1 when past_days=1)
+  const todayDateStr = currentTime ? currentTime.slice(0, 10) : "";
+  let todayIndex = data.daily.time.findIndex((d) => d === todayDateStr);
+  if (todayIndex === -1) {
+    todayIndex = data.daily.time.length > 1 ? 1 : 0;
+  }
+
+  // Daily forecast: Yesterday (-1 day), Today (0), and up to 14 days ahead (total 16 days)
+  // Last weekday equals Today's weekday (+14 days)
+  const maxDailyDays = 16;
+  const forecast = data.daily.time.slice(0, maxDailyDays).map((date, index) => ({
     date,
     code: data.daily.weather_code[index],
     max: Math.round(data.daily.temperature_2m_max[index]),
@@ -355,23 +393,25 @@ function parseWeatherData(data) {
     precipitation: data.daily.precipitation_sum[index],
     precipitationHours: data.daily.precipitation_hours[index],
     precipitationProbability: data.daily.precipitation_probability_max[index],
+    isYesterday: index < todayIndex,
+    isToday: index === todayIndex,
   }));
 
-  const todayRange = forecast.length > 0
+  const todayRange = data.daily.time.length > todayIndex && todayIndex >= 0
     ? {
-      max: forecast[0].max,
-      min: forecast[0].min,
-      difference: Math.round(data.daily.temperature_2m_max[0] - data.daily.temperature_2m_min[0]),
-      precipitation: data.daily.precipitation_sum[0],
-      precipitationHours: data.daily.precipitation_hours[0],
-      precipitationProbability: data.daily.precipitation_probability_max[0],
-      uvIndex: data.daily.uv_index_max[0],
-      moonPhase: data.daily.moon_phase[0],
+      max: Math.round(data.daily.temperature_2m_max[todayIndex]),
+      min: Math.round(data.daily.temperature_2m_min[todayIndex]),
+      difference: Math.round(data.daily.temperature_2m_max[todayIndex] - data.daily.temperature_2m_min[todayIndex]),
+      precipitation: data.daily.precipitation_sum[todayIndex],
+      precipitationHours: data.daily.precipitation_hours[todayIndex],
+      precipitationProbability: data.daily.precipitation_probability_max[todayIndex],
+      uvIndex: data.daily.uv_index_max[todayIndex],
+      moonPhase: data.daily.moon_phase[todayIndex],
     }
     : null;
 
   const currentVisibilityIndex = data.hourly.time.findIndex((time) => time === currentTime);
-  const visibilityIndex = currentVisibilityIndex === -1 ? startIndex : currentVisibilityIndex;
+  const visibilityIndex = currentVisibilityIndex === -1 ? currentHourIndex : currentVisibilityIndex;
 
   return {
     current: {
@@ -392,7 +432,7 @@ function parseWeatherData(data) {
         precipitation: data.hourly.precipitation[index],
         precipitationProbability: data.hourly.precipitation_probability[index],
       }))
-      .filter((hour) => hour.time.startsWith(data.daily.time[0])),
+      .filter((hour) => hour.time.startsWith(data.daily.time[todayIndex])),
     hourly,
     hourlyGraph,
     forecast,
@@ -452,7 +492,8 @@ function getWeatherEvents(weather) {
   }
 
   let rainyDays = 0;
-  for (const day of forecast) {
+  const todayOrFutureDays = forecast.filter((day) => !day.isYesterday);
+  for (const day of todayOrFutureDays) {
     if (day.precipitation < 5) break;
     rainyDays += 1;
   }
@@ -649,8 +690,9 @@ function renderHourlyPrecipBars(precipHours) {
 }
 
 /**
- * Renders the hourly timeline forecast with 8 columns and a 1-hour resolution temperature graph.
- * @param {array} hours - Array of 8 hourly forecast objects with time, code, temperature, isDay
+ * Renders the hourly timeline forecast with columns and a 1-hour resolution temperature graph.
+ * Positions the horizontal scrollbar so that 'Now' is shown on the left on load.
+ * @param {array} hours - Array of hourly forecast objects with time, code, temperature, isDay, isCurrent
  * @param {array} hourlyGraph - Array of 1-hour resolution temperature data points
  */
 function renderHourlyForecast(hours, hourlyGraph) {
@@ -665,8 +707,9 @@ function renderHourlyForecast(hours, hourlyGraph) {
       const timeLabel = formatHour(hour.time);
       const precipBars = renderHourlyPrecipBars(hour.precipHours);
       const precipText = formatPrecipitation(hour.precipitation, hour.precipitationProbability);
+      const currentAttr = hour.isCurrent ? ' data-current="true"' : '';
       return `
-        <div class="hourly-item">
+        <div class="hourly-item"${currentAttr}>
           <div class="hourly-time">${timeLabel}</div>
           <div class="hourly-icon" aria-label="${condition.label}">${condition.icon}</div>
           <div class="hourly-graph-spacer"></div>
@@ -681,11 +724,17 @@ function renderHourlyForecast(hours, hourlyGraph) {
   const svgHtml = generateHourlySvg(hourlyGraph, hours.length);
 
   hourlyRowEl.innerHTML = columnsHtml + svgHtml;
+
+  const currentCol = hourlyRowEl.querySelector('[data-current="true"]');
+  if (currentCol) {
+    hourlyRowEl.scrollLeft = currentCol.offsetLeft;
+  }
 }
 
 /**
- * Renders the 7-day forecast to the DOM using template literals.
- * @param {array} days - Array of daily forecast objects with date, code, max, min
+ * Renders the daily forecast to the DOM using template literals.
+ * Positions the vertical scrollbar so that 'Today' is shown at the top on load.
+ * @param {array} days - Array of daily forecast objects with date, code, max, min, isYesterday, isToday
  */
 function renderForecast(days) {
   if (!days || days.length === 0) {
@@ -694,12 +743,13 @@ function renderForecast(days) {
   }
 
   forecastRowEl.innerHTML = days
-    .map((day, index) => {
+    .map((day) => {
       const condition = getWeatherCondition(day.code, true);
-      const dayLabel = index === 0 ? "Today" : formatWeekday(day.date);
+      const dayLabel = day.isYesterday ? "Yesterday" : day.isToday ? "Today" : formatWeekday(day.date);
       const precipText = formatPrecipitation(day.precipitation, day.precipitationProbability);
+      const todayAttr = day.isToday ? ' data-today="true"' : '';
       return `
-        <div class="forecast-item">
+        <div class="forecast-item"${todayAttr}>
           <div class="forecast-day">${dayLabel}</div>
           <div class="forecast-icon" aria-label="${condition.label}">${condition.icon}</div>
           <div class="forecast-precip">${precipText}</div>
@@ -711,6 +761,14 @@ function renderForecast(days) {
       `.trim();
     })
     .join("");
+
+  const todayRow = forecastRowEl.querySelector('[data-today="true"]');
+  if (todayRow) {
+    const top = todayRow.offsetParent === forecastRowEl
+      ? todayRow.offsetTop
+      : todayRow.offsetTop - forecastRowEl.offsetTop;
+    forecastRowEl.scrollTop = top;
+  }
 }
 
 /**

@@ -305,7 +305,6 @@ body {
   position: absolute;
   top: 56px;
   left: 0;
-  width: 464px;
   height: 48px;
   pointer-events: none;
 }
@@ -332,12 +331,16 @@ body {
 }
 
 .forecast-row {
+  position: relative;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--panel);
-  overflow: hidden;
+  max-height: 330px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 .forecast-row:empty {

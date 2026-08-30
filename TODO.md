@@ -149,16 +149,17 @@ After completing each phase:
   - [x] The height of the bar indicates the amount of rain (mm)
   - [x] The shade of the bar indicates the probability of rain (low, medium, high)
 
-## Phase 2g: Extend the forecast timelines
-- [ ] Extend the hourly forecast to be two days (48 hours)
-- [ ] Extend the hourly forecast such the last printed hour equals the first (+3 hours?)
-- [ ] Extend the hourly forecast to contain a past timestamp (-3 hours?)
-- [ ] If possible, make the hourly forecast show now at left after loading (past timestamp not directly visible)
-- [ ] Extend the daily forecast to be two weeks (14 days)
-- [ ] Extend the daily forecast such the last weekday equals the first (+1 day?)
-- [ ] Extend the daily forecast to include yesterday (-1 day?)
-- [ ] Make the daily forecast scrollable (about 8 days visible at the same time)
-- [ ] If possible, make the daily forecast show today at top after loading (yesterday not directly visible)
+- **Phase 2g: Extend the forecast timelines** ✅
+  - [x] Extend the hourly forecast to be two days (48 hours)
+  - [x] Extend the hourly forecast such the last printed hour equals the first (+3 hours?)
+  - [x] Extend the hourly forecast to contain a past timestamp (-3 hours?)
+  - [x] If possible, make the hourly forecast show now at left after loading (past timestamp not directly visible)
+  - [x] Extend the daily forecast to be two weeks (14 days)
+  - [x] Extend the daily forecast such the last weekday equals the first (+1 day?)
+  - [x] Extend the daily forecast to include yesterday (-1 day?)
+  - [x] Make the daily forecast scrollable (about 8 days visible at the same time)
+  - [x] If possible, make the daily forecast show today at top after loading (yesterday not directly visible)
+  - [x] Verified: Live Open-Meteo test verified 18 hourly columns (-3h to +48h), 52-point SVG temperature graph, 16 daily forecast rows (Yesterday, Today, +14 days with matching weekday), event detection aligned with Today, and scroll positioning on render
 
 ## Phase 3a: Static Favorites List
 - [ ] Hardcode 3-4 favorite locations
