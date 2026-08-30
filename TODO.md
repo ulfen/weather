@@ -163,10 +163,11 @@ After completing each phase:
 
 ## Phase 3: Location Search, Favorites & Current Location
 
-- **Phase 3a: Condensed Search UI**
-  - [ ] Replace permanent search box with compact search icon (🔍)
-  - [ ] Implement collapsible header search input (toggle open/close on click/submit)
-  - [ ] Maintain clean, condensed header aesthetic
+- **Phase 3a: Condensed Search UI** ✅
+  - [x] Replace permanent search box with compact search icon (🔍)
+  - [x] Implement collapsible header search input (toggle open/close on click/submit)
+  - [x] Maintain clean, condensed header aesthetic
+  - [x] Verified: Header displays city name with search icon button in collapsed state, opens auto-focused input on toggle, closes on Escape/close button, and auto-collapses on search success
 
 - **Phase 3b: Dynamic Favorites & localStorage**
   - [ ] Implement localStorage helpers (loadFavorites, saveFavorites, addFavorite, removeFavorite)

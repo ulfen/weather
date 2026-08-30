@@ -15,6 +15,10 @@ let WEATHER_LOCATION = {
 };
 
 const locationEl = document.getElementById("location");
+const headerMainEl = document.getElementById("header-main");
+const locationFormEl = document.getElementById("location-form");
+const searchToggleBtnEl = document.getElementById("search-toggle");
+const searchCloseBtnEl = document.getElementById("search-close");
 const temperatureEl = document.getElementById("temperature");
 const conditionEl = document.getElementById("condition");
 const weatherEventsEl = document.getElementById("weather-events");
@@ -208,6 +212,31 @@ async function fetchCoordinates(query) {
 }
 
 /**
+ * Opens the collapsible search form and focuses the input.
+ */
+function openSearch() {
+  if (headerMainEl && locationFormEl) {
+    headerMainEl.classList.add("hidden");
+    locationFormEl.classList.remove("hidden");
+    searchToggleBtnEl?.setAttribute("aria-expanded", "true");
+    clearSearchError();
+    locationInputEl?.focus();
+  }
+}
+
+/**
+ * Closes the search form, clears errors, and restores the main header.
+ */
+function closeSearch() {
+  if (headerMainEl && locationFormEl) {
+    locationFormEl.classList.add("hidden");
+    headerMainEl.classList.remove("hidden");
+    searchToggleBtnEl?.setAttribute("aria-expanded", "false");
+    clearSearchError();
+  }
+}
+
+/**
  * Searches for a location and updates the weather display.
  */
 async function searchLocation() {
@@ -225,6 +254,7 @@ async function searchLocation() {
 
     WEATHER_LOCATION = location;
     locationInputEl.value = "";
+    closeSearch();
     fetchWeather();
   } catch (error) {
     console.error("Location search failed:", error);
@@ -799,9 +829,23 @@ async function fetchWeather() {
   }
 }
 
-document.getElementById("location-form").addEventListener("submit", (event) => {
+locationFormEl?.addEventListener("submit", (event) => {
   event.preventDefault();
   searchLocation();
+});
+
+searchToggleBtnEl?.addEventListener("click", () => {
+  openSearch();
+});
+
+searchCloseBtnEl?.addEventListener("click", () => {
+  closeSearch();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && locationFormEl && !locationFormEl.classList.contains("hidden")) {
+    closeSearch();
+  }
 });
 
 fetchWeather();

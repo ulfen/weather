@@ -57,27 +57,78 @@ body {
   text-align: center;
 }
 
-.weather-header h1 {
+.weather-header {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 36px;
+}
+
+.header-main.hidden {
+  display: none;
+}
+
+.location {
   margin: 0;
   font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: var(--border);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
 }
 
 .location-search {
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
   flex-wrap: wrap;
+}
+
+.location-search.hidden {
+  display: none;
 }
 
 #location-input {
   flex: 1;
-  min-width: 150px;
-  padding: 8px 10px;
+  min-width: 0;
+  padding: 8px 12px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.95rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
   font-family: inherit;
   color: var(--text);
   background: var(--panel);
@@ -88,42 +139,44 @@ body {
   border-color: var(--muted);
 }
 
-#search-button {
-  padding: 8px 16px;
+.search-submit-btn,
+.search-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--panel);
   color: var(--text);
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: background 0.2s;
+  flex-shrink: 0;
 }
 
-#search-button:hover {
+.search-submit-btn:hover,
+.search-close-btn:hover {
   background: var(--border);
 }
 
-#search-button:active {
+.search-submit-btn:active,
+.search-close-btn:active {
   opacity: 0.8;
 }
 
 .search-error {
   width: 100%;
-  font-size: 0.85rem;
-  color: #d32f2f;
+  font-size: 0.8rem;
+  color: #ef4444;
   margin-top: 4px;
+  text-align: left;
   display: none;
 }
 
 .search-error.visible {
   display: block;
-}
-
-.location {
-  margin: 12px 0 18px;
-  font-size: 1.05rem;
-  color: var(--muted);
 }
 
 .current-weather {
