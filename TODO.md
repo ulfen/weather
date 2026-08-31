@@ -123,31 +123,31 @@ After completing each phase:
     - [x] Visibility now less than 1 km: show visibility in 100 m; less than 100 m shows less than 100 m
     - [x] Full moon tonight: detect the documented moon phase near 0.5
 
-## Phase 2f: Add Precipitation to Forecast
+- **Phase 2f: Add Precipitation to Forecast** ✅
 
-- **Phase 2f-i: Add Precipitation text to both 7-day and hourly forecasts** ✅
-  - [x] Extend API requests to include precipitation and precipitation_probability
-  - [x] Round precipitation to mm if above 1mm. round to 0.1 mm if below 1mm
-  - [x] Round percentage to 5% if above 10%. round to 1% if below 10%
-  - [x] Add rounded rain amount (mm) and probability (%) to hourly forecast cards, if both above 0
-  - [x] Add rounded rain amount (mm) and probability (%) to daily 7-day cards, if both above 0
-  - [x] Update card layout to accommodate precipitation data: x mm (y%)
-
-- **Phase 2f-ii: Precipitation graphic in 7-day forecast**
-  - [ ] Combine precipitation and precipitation_probability into a single graphic
-  - [ ] Use the precipitation graphic in the 7-day forecast
-  - [ ] The graphic should indicate both the amount of rain and the probability of rain
-  - [ ] Make it appear as a small bar of fixed height
-  - [ ] The width of the bar indicates the amount of rain (light, moderate, heavy)
-  - [ ] The shade of the bar indicates the probability of rain (low, medium, high)
-
-- **Phase 2f-iii: Precipitation graphic in hourly forecast** ✅
-  - [x] Add precipitation amount under the temperature in the hourly forecast (if not 0)
-  - [x] Add a bar chart with precipitation amount to the hourly forecast (if not 0)
-  - [x] Combine precipitation and precipitation_probability into the bar chart
-  - [x] The bar chart should indicate both the amount of rain and the probability of rain
-  - [x] The height of the bar indicates the amount of rain (mm)
-  - [x] The shade of the bar indicates the probability of rain (low, medium, high)
+  - **Phase 2f-i: Add Precipitation text to both 7-day and hourly forecasts** ✅
+    - [x] Extend API requests to include precipitation and precipitation_probability
+    - [x] Round precipitation to mm if above 1mm. round to 0.1 mm if below 1mm
+    - [x] Round percentage to 5% if above 10%. round to 1% if below 10%
+    - [x] Add rounded rain amount (mm) and probability (%) to hourly forecast cards, if both above 0
+    - [x] Add rounded rain amount (mm) and probability (%) to daily 7-day cards, if both above 0
+    - [x] Update card layout to accommodate precipitation data: x mm (y%)
+  
+  - **Phase 2f-ii: Precipitation graphic in 7-day forecast**
+    - [ ] Combine precipitation and precipitation_probability into a single graphic
+    - [ ] Use the precipitation graphic in the 7-day forecast
+    - [ ] The graphic should indicate both the amount of rain and the probability of rain
+    - [ ] Make it appear as a small bar of fixed height
+    - [ ] The width of the bar indicates the amount of rain (light, moderate, heavy)
+    - [ ] The shade of the bar indicates the probability of rain (low, medium, high)
+  
+  - **Phase 2f-iii: Precipitation graphic in hourly forecast** ✅
+    - [x] Add precipitation amount under the temperature in the hourly forecast (if not 0)
+    - [x] Add a bar chart with precipitation amount to the hourly forecast (if not 0)
+    - [x] Combine precipitation and precipitation_probability into the bar chart
+    - [x] The bar chart should indicate both the amount of rain and the probability of rain
+    - [x] The height of the bar indicates the amount of rain (mm)
+    - [x] The shade of the bar indicates the probability of rain (low, medium, high)
 
 - **Phase 2g: Extend the forecast timelines** ✅
   - [x] Extend the hourly forecast to be two days (48 hours)
@@ -161,25 +161,26 @@ After completing each phase:
   - [x] If possible, make the daily forecast show today at top after loading (yesterday not directly visible)
   - [x] Verified: Live Open-Meteo test verified 18 hourly columns (-3h to +48h), 52-point SVG temperature graph, 16 daily forecast rows (Yesterday, Today, +14 days with matching weekday), event detection aligned with Today, and scroll positioning on render
 
-## Phase 3: Location Search, Favorites & Current Location
+- **Phase 3: Location Search, Favorites & Current Location** ✅
 
-- **Phase 3a: Condensed Search UI** ✅
-  - [x] Replace permanent search box with compact search icon (🔍)
-  - [x] Implement collapsible header search input (toggle open/close on click/submit)
-  - [x] Maintain clean, condensed header aesthetic
-  - [x] Verified: Header displays city name with search icon button in collapsed state, opens auto-focused input on toggle, closes on Escape/close button, and auto-collapses on search success
-
-- **Phase 3b: Dynamic Favorites & localStorage** ✅
-  - [x] Implement localStorage helpers (loadFavorites, saveFavorites, addFavorite, removeFavorite)
-  - [x] Add star icon toggle (★/☆) next to current location name to add/remove favorites
-  - [x] Create favorites dropdown/menu UI displaying saved locations
-  - [x] Verified: Favorites persist in localStorage, star toggle accurately reflects active location status, dropdown lists saved favorites with quick selection and deletion, and outside click/Escape handles dismissal cleanly
-
-- **Phase 3c: Physical GPS Location and Reverse Geocoding**
-  - [ ] Add "📍 Current Location" option at top of favorites list using `navigator.geolocation`
-  - [ ] Use reverse geocoding to find a location name from coordinates
-  - [ ] Make current (GPS) location the default location on startup
-  - [ ] Allow switching between saved favorites and GPS location smoothly
+  - **Phase 3a: Condensed Search UI** ✅
+    - [x] Replace permanent search box with compact search icon (🔍)
+    - [x] Implement collapsible header search input (toggle open/close on click/submit)
+    - [x] Maintain clean, condensed header aesthetic
+    - [x] Verified: Header displays city name with search icon button in collapsed state, opens auto-focused input on toggle, closes on Escape/close button, and auto-collapses on search success
+  
+  - **Phase 3b: Dynamic Favorites & localStorage** ✅
+    - [x] Implement localStorage helpers (loadFavorites, saveFavorites, addFavorite, removeFavorite)
+    - [x] Add star icon toggle (★/☆) next to current location name to add/remove favorites
+    - [x] Create favorites dropdown/menu UI displaying saved locations
+    - [x] Verified: Favorites persist in localStorage, star toggle accurately reflects active location status, dropdown lists saved favorites with quick selection and deletion, and outside click/Escape handles dismissal cleanly
+  
+  - **Phase 3c: Physical GPS Location and Reverse Geocoding** ✅
+    - [x] Add "📍 Current Location" option at top of favorites list using `navigator.geolocation`
+    - [x] Use reverse geocoding to find a location name from coordinates
+    - [x] Make current (GPS) location the default location on startup
+    - [x] Allow switching between saved favorites and GPS location smoothly
+    - [x] Verified: Startup attempts GPS retrieval with Nominatim reverse geocoding + formatted coordinate fallback, dropdown contains pinned "📍 Current Location" with active state indicator, and switching between favorites, search, and GPS location works seamlessly
 
 ## Phase 4: Weather Model Selection & Caching
 

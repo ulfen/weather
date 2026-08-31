@@ -157,6 +157,50 @@ body {
   display: none;
 }
 
+.current-location-section {
+  padding: 0 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+
+.current-location-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.current-location-btn:hover {
+  background-color: var(--panel);
+}
+
+.current-location-btn.is-active {
+  background-color: var(--panel);
+  font-weight: 600;
+}
+
+.current-location-icon {
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.current-location-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .favorites-header {
   display: flex;
   align-items: center;

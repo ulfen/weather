@@ -7,12 +7,16 @@
  * @property {number} latitude - Geographic latitude for Open-Meteo API
  * @property {number} longitude - Geographic longitude for Open-Meteo API
  */
-let WEATHER_LOCATION = {
+const DEFAULT_LOCATION = {
   city: "Venlo",
   country: "Netherlands",
   latitude: 51.37,
   longitude: 6.17,
+  isGps: false,
 };
+
+let WEATHER_LOCATION = { ...DEFAULT_LOCATION };
+let LAST_GPS_LOCATION = null;
 
 const locationEl = document.getElementById("location");
 const locationBtnEl = document.getElementById("location-btn");
@@ -21,6 +25,8 @@ const locationFormEl = document.getElementById("location-form");
 const favoriteToggleBtnEl = document.getElementById("favorite-toggle");
 const favoritesMenuEl = document.getElementById("favorites-menu");
 const favoritesListEl = document.getElementById("favorites-list");
+const currentLocationBtnEl = document.getElementById("current-location-btn");
+const currentLocationLabelEl = document.getElementById("current-location-label");
 const searchToggleBtnEl = document.getElementById("search-toggle");
 const searchCloseBtnEl = document.getElementById("search-close");
 const temperatureEl = document.getElementById("temperature");
@@ -219,6 +225,172 @@ async function fetchCoordinates(query) {
 }
 
 /**
+ * Wraps browser navigator.geolocation in a Promise.
+ * @returns {Promise<{latitude: number, longitude: number}>}
+ */
+function getGpsCoordinates() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported by this browser."));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        reject(error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000,
+      }
+    );
+  });
+}
+
+/**
+ * Formats coordinates into readable shorthand (e.g., "N51.37, E6.17").
+ * @param {number} latitude - Geographic latitude
+ * @param {number} longitude - Geographic longitude
+ * @param {number} decimals - Number of decimal digits (default 2)
+ * @returns {string} Formatted coordinate string
+ */
+function formatCoordinates(latitude, longitude, decimals = 2) {
+  const latDir = latitude >= 0 ? "N" : "S";
+  const lonDir = longitude >= 0 ? "E" : "W";
+  return `${latDir}${Math.abs(latitude).toFixed(decimals)}, ${lonDir}${Math.abs(longitude).toFixed(decimals)}`;
+}
+
+/**
+ * Extracts a representative place name from a Nominatim address object.
+ * @param {object} address - Address object from Nominatim
+ * @returns {string|null} City, town, village, or administrative name
+ */
+function getPlaceName(address) {
+  if (!address || typeof address !== "object") return null;
+  return (
+    address.city ||
+    address.town ||
+    address.village ||
+    address.municipality ||
+    address.county ||
+    null
+  );
+}
+
+/**
+ * Builds the Nominatim reverse geocoding API URL.
+ * @param {number} latitude - Geographic latitude
+ * @param {number} longitude - Geographic longitude
+ * @returns {string} URL string
+ */
+function buildReverseGeocodingUrl(latitude, longitude) {
+  return `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`;
+}
+
+/**
+ * Performs reverse geocoding to retrieve place name for coordinates, falling back to formatted coordinates on error.
+ * @param {number} latitude - Geographic latitude
+ * @param {number} longitude - Geographic longitude
+ * @returns {Promise<{city: string, country: string}>}
+ */
+async function reverseGeocode(latitude, longitude) {
+  try {
+    const url = buildReverseGeocodingUrl(latitude, longitude);
+    const response = await fetch(url, {
+      headers: {
+        "Accept-Language": "en",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Reverse geocoding request failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data && data.address) {
+      const place = getPlaceName(data.address);
+      const country = data.address.country || "";
+      if (place) {
+        return { city: place, country };
+      }
+    }
+  } catch (error) {
+    console.warn("Reverse geocoding unavailable; falling back to coordinates:", error);
+  }
+
+  return {
+    city: formatCoordinates(latitude, longitude),
+    country: "",
+  };
+}
+
+/**
+ * Fetches the user's current GPS position and performs reverse geocoding.
+ * @returns {Promise<object>} Location object { city, country, latitude, longitude, isGps: true }
+ */
+async function fetchGpsLocation() {
+  const coords = await getGpsCoordinates();
+  const place = await reverseGeocode(coords.latitude, coords.longitude);
+  const location = {
+    city: place.city,
+    country: place.country || "",
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    isGps: true,
+  };
+  LAST_GPS_LOCATION = location;
+  return location;
+}
+
+/**
+ * Switches the active forecast to the physical GPS location.
+ */
+async function selectGpsLocation() {
+  closeFavoritesMenu();
+  if (currentLocationLabelEl) {
+    currentLocationLabelEl.textContent = "Detecting location...";
+  }
+
+  try {
+    const location = await fetchGpsLocation();
+    WEATHER_LOCATION = location;
+    if (currentLocationLabelEl) {
+      currentLocationLabelEl.textContent = "Current Location";
+    }
+    updateFavoriteButton();
+    fetchWeather();
+  } catch (error) {
+    console.error("GPS location detection failed:", error);
+    if (currentLocationLabelEl) {
+      currentLocationLabelEl.textContent = "Current Location";
+    }
+    showSearchError("Could not access physical GPS location.");
+  }
+}
+
+/**
+ * Initializes the application location on startup (attempts GPS, falls back to default).
+ */
+async function initAppLocation() {
+  try {
+    const gpsLoc = await fetchGpsLocation();
+    WEATHER_LOCATION = gpsLoc;
+  } catch (error) {
+    console.warn("Initial GPS detection failed or was denied; using default location:", error);
+    WEATHER_LOCATION = { ...DEFAULT_LOCATION };
+  }
+  updateFavoriteButton();
+  fetchWeather();
+}
+
+/**
  * Loads favorites array from localStorage.
  * @returns {Array<object>} Array of saved location objects
  */
@@ -379,6 +551,7 @@ function selectFavoriteLocation(fav) {
     country: fav.country || "",
     latitude: fav.latitude,
     longitude: fav.longitude,
+    isGps: false,
   };
   closeFavoritesMenu();
   updateFavoriteButton();
@@ -389,6 +562,11 @@ function selectFavoriteLocation(fav) {
  * Renders the saved favorites list in the dropdown menu.
  */
 function renderFavoritesMenu() {
+  if (currentLocationBtnEl) {
+    const isGpsActive = !!WEATHER_LOCATION.isGps;
+    currentLocationBtnEl.classList.toggle("is-active", isGpsActive);
+  }
+
   if (!favoritesListEl) return;
   const favorites = loadFavorites();
   if (favorites.length === 0) {
@@ -398,7 +576,7 @@ function renderFavoritesMenu() {
 
   favoritesListEl.replaceChildren();
   favorites.forEach((fav) => {
-    const isCurrent = isSameLocation(fav, WEATHER_LOCATION);
+    const isCurrent = !WEATHER_LOCATION.isGps && isSameLocation(fav, WEATHER_LOCATION);
     const itemEl = document.createElement("div");
     itemEl.className = `favorite-item${isCurrent ? " is-active" : ""}`;
 
@@ -468,7 +646,10 @@ async function searchLocation() {
       return;
     }
 
-    WEATHER_LOCATION = location;
+    WEATHER_LOCATION = {
+      ...location,
+      isGps: false,
+    };
     locationInputEl.value = "";
     closeSearch();
     fetchWeather();
@@ -1067,6 +1248,10 @@ locationBtnEl?.addEventListener("click", () => {
   toggleFavoritesMenu();
 });
 
+currentLocationBtnEl?.addEventListener("click", () => {
+  selectGpsLocation();
+});
+
 document.addEventListener("click", (event) => {
   if (favoritesMenuEl && !favoritesMenuEl.classList.contains("hidden")) {
     const header = document.querySelector(".weather-header");
@@ -1087,4 +1272,4 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-fetchWeather();
+initAppLocation();
