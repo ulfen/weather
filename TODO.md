@@ -172,11 +172,11 @@ After completing each phase:
 - **Phase 3b: Dynamic Favorites & localStorage**
   - [ ] Implement localStorage helpers (loadFavorites, saveFavorites, addFavorite, removeFavorite)
   - [ ] Add star icon toggle (★/☆) next to current location name to add/remove favorites
-  - [ ] Auto-save last viewed location and restore on startup
+  - [ ] Create favorites dropdown/menu UI displaying saved locations
 
 - **Phase 3c: Favorites Dropdown & Physical GPS Location**
-  - [ ] Create favorites dropdown/menu UI displaying saved locations
   - [ ] Add "📍 Current Location" option at top of favorites list using `navigator.geolocation`
+  - [ ] Make current (GPS) location" the default location on startup
   - [ ] Allow switching between saved favorites and GPS location smoothly
 
 ## Phase 4: Weather Model Selection & Caching
