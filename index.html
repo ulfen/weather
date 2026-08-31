@@ -12,8 +12,21 @@
   <section class="weather-card" aria-label="Weather forecast">
     <header class="weather-header">
       <div class="header-main" id="header-main">
-        <h2 class="location" id="location"></h2>
-        <button type="button" class="icon-btn search-toggle-btn" id="search-toggle" aria-label="Search location" aria-expanded="false">🔍</button>
+        <button type="button" class="location-btn" id="location-btn" aria-label="Toggle favorite locations" aria-expanded="false" aria-haspopup="true">
+          <span class="location" id="location"></span>
+          <span class="location-chevron" aria-hidden="true">▾</span>
+        </button>
+        <div class="header-actions">
+          <button type="button" class="icon-btn favorite-toggle-btn" id="favorite-toggle" aria-label="Add to favorites" aria-pressed="false">☆</button>
+          <button type="button" class="icon-btn search-toggle-btn" id="search-toggle" aria-label="Search location" aria-expanded="false">🔍</button>
+        </div>
+      </div>
+
+      <div class="favorites-menu hidden" id="favorites-menu" role="menu" aria-label="Favorite locations">
+        <div class="favorites-header">
+          <span class="favorites-title">Saved Locations</span>
+        </div>
+        <div class="favorites-list" id="favorites-list"></div>
       </div>
 
       <form class="location-search hidden" id="location-form" role="search">

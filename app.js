@@ -15,8 +15,12 @@ let WEATHER_LOCATION = {
 };
 
 const locationEl = document.getElementById("location");
+const locationBtnEl = document.getElementById("location-btn");
 const headerMainEl = document.getElementById("header-main");
 const locationFormEl = document.getElementById("location-form");
+const favoriteToggleBtnEl = document.getElementById("favorite-toggle");
+const favoritesMenuEl = document.getElementById("favorites-menu");
+const favoritesListEl = document.getElementById("favorites-list");
 const searchToggleBtnEl = document.getElementById("search-toggle");
 const searchCloseBtnEl = document.getElementById("search-close");
 const temperatureEl = document.getElementById("temperature");
@@ -28,6 +32,8 @@ const forecastRowEl = document.getElementById("forecast-row");
 const locationInputEl = document.getElementById("location-input");
 const searchButtonEl = document.getElementById("search-button");
 const searchErrorEl = document.getElementById("search-error");
+
+const FAVORITES_STORAGE_KEY = "weather_favorites";
 
 const WEATHER_CODES = {
   0: { label: "Clear sky", day: "☀️", night: "🌙" },
@@ -72,6 +78,7 @@ function setWeatherFailure() {
   weatherIconEl.setAttribute("aria-label", "Weather unavailable");
   hourlyRowEl.innerHTML = '<div class="hourly-item hourly-error">Hourly forecast unavailable</div>';
   forecastRowEl.innerHTML = '<div class="forecast-item forecast-error">Forecast unavailable</div>';
+  updateFavoriteButton();
 }
 
 /**
@@ -212,10 +219,219 @@ async function fetchCoordinates(query) {
 }
 
 /**
+ * Loads favorites array from localStorage.
+ * @returns {Array<object>} Array of saved location objects
+ */
+function loadFavorites() {
+  try {
+    const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error("Failed to load favorites from localStorage:", error);
+    return [];
+  }
+}
+
+/**
+ * Saves favorites array to localStorage.
+ * @param {Array<object>} favorites - Array of location objects
+ */
+function saveFavorites(favorites) {
+  try {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+  } catch (error) {
+    console.error("Failed to save favorites to localStorage:", error);
+  }
+}
+
+/**
+ * Checks if two location objects refer to the same location.
+ * @param {object} locA - First location
+ * @param {object} locB - Second location
+ * @returns {boolean} True if matching
+ */
+function isSameLocation(locA, locB) {
+  if (!locA || !locB) return false;
+  if (
+    typeof locA.latitude === "number" &&
+    typeof locB.latitude === "number" &&
+    typeof locA.longitude === "number" &&
+    typeof locB.longitude === "number"
+  ) {
+    const latDiff = Math.abs(locA.latitude - locB.latitude);
+    const lonDiff = Math.abs(locA.longitude - locB.longitude);
+    if (latDiff < 0.05 && lonDiff < 0.05) return true;
+  }
+  return (
+    String(locA.city).toLowerCase() === String(locB.city).toLowerCase() &&
+    String(locA.country || "").toLowerCase() === String(locB.country || "").toLowerCase()
+  );
+}
+
+/**
+ * Checks if a location is in the favorites list.
+ * @param {object} location - Location to check (defaults to WEATHER_LOCATION)
+ * @returns {boolean}
+ */
+function isFavorite(location = WEATHER_LOCATION) {
+  const favorites = loadFavorites();
+  return favorites.some((fav) => isSameLocation(fav, location));
+}
+
+/**
+ * Adds a location to favorites if not already present.
+ * @param {object} location - Location to add (defaults to WEATHER_LOCATION)
+ */
+function addFavorite(location = WEATHER_LOCATION) {
+  const favorites = loadFavorites();
+  if (!favorites.some((fav) => isSameLocation(fav, location))) {
+    favorites.push({
+      city: location.city,
+      country: location.country || "",
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
+    saveFavorites(favorites);
+  }
+  updateFavoriteButton();
+  renderFavoritesMenu();
+}
+
+/**
+ * Removes a location from favorites.
+ * @param {object} location - Location to remove (defaults to WEATHER_LOCATION)
+ */
+function removeFavorite(location = WEATHER_LOCATION) {
+  let favorites = loadFavorites();
+  favorites = favorites.filter((fav) => !isSameLocation(fav, location));
+  saveFavorites(favorites);
+  updateFavoriteButton();
+  renderFavoritesMenu();
+}
+
+/**
+ * Toggles the favorite status of the current WEATHER_LOCATION.
+ */
+function toggleFavorite() {
+  if (isFavorite(WEATHER_LOCATION)) {
+    removeFavorite(WEATHER_LOCATION);
+  } else {
+    addFavorite(WEATHER_LOCATION);
+  }
+}
+
+/**
+ * Updates the star button icon and aria-pressed state based on current location.
+ */
+function updateFavoriteButton() {
+  if (!favoriteToggleBtnEl) return;
+  const isFav = isFavorite(WEATHER_LOCATION);
+  favoriteToggleBtnEl.textContent = isFav ? "★" : "☆";
+  favoriteToggleBtnEl.setAttribute("aria-pressed", isFav ? "true" : "false");
+  favoriteToggleBtnEl.setAttribute("aria-label", isFav ? "Remove from favorites" : "Add to favorites");
+  favoriteToggleBtnEl.classList.toggle("is-favorite", isFav);
+}
+
+/**
+ * Opens the favorites dropdown menu.
+ */
+function openFavoritesMenu() {
+  if (favoritesMenuEl && locationBtnEl) {
+    if (locationFormEl && !locationFormEl.classList.contains("hidden")) {
+      closeSearch();
+    }
+    renderFavoritesMenu();
+    favoritesMenuEl.classList.remove("hidden");
+    locationBtnEl.setAttribute("aria-expanded", "true");
+  }
+}
+
+/**
+ * Closes the favorites dropdown menu.
+ */
+function closeFavoritesMenu() {
+  if (favoritesMenuEl && locationBtnEl) {
+    favoritesMenuEl.classList.add("hidden");
+    locationBtnEl.setAttribute("aria-expanded", "false");
+  }
+}
+
+/**
+ * Toggles the favorites dropdown menu.
+ */
+function toggleFavoritesMenu() {
+  if (favoritesMenuEl && !favoritesMenuEl.classList.contains("hidden")) {
+    closeFavoritesMenu();
+  } else {
+    openFavoritesMenu();
+  }
+}
+
+/**
+ * Selects a favorite location and loads its weather.
+ * @param {object} fav - Saved favorite location object
+ */
+function selectFavoriteLocation(fav) {
+  WEATHER_LOCATION = {
+    city: fav.city,
+    country: fav.country || "",
+    latitude: fav.latitude,
+    longitude: fav.longitude,
+  };
+  closeFavoritesMenu();
+  updateFavoriteButton();
+  fetchWeather();
+}
+
+/**
+ * Renders the saved favorites list in the dropdown menu.
+ */
+function renderFavoritesMenu() {
+  if (!favoritesListEl) return;
+  const favorites = loadFavorites();
+  if (favorites.length === 0) {
+    favoritesListEl.innerHTML = '<div class="favorites-empty">No favorite locations saved.<br>Click the star ★ to save this city.</div>';
+    return;
+  }
+
+  favoritesListEl.replaceChildren();
+  favorites.forEach((fav) => {
+    const isCurrent = isSameLocation(fav, WEATHER_LOCATION);
+    const itemEl = document.createElement("div");
+    itemEl.className = `favorite-item${isCurrent ? " is-active" : ""}`;
+
+    const nameBtn = document.createElement("button");
+    nameBtn.type = "button";
+    nameBtn.className = "favorite-item-btn";
+    nameBtn.textContent = fav.country ? `${fav.city}, ${fav.country}` : fav.city;
+    nameBtn.setAttribute("aria-label", `Select ${fav.city}`);
+    nameBtn.addEventListener("click", () => {
+      selectFavoriteLocation(fav);
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "favorite-item-remove";
+    removeBtn.textContent = "✕";
+    removeBtn.setAttribute("aria-label", `Remove ${fav.city} from favorites`);
+    removeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeFavorite(fav);
+    });
+
+    itemEl.append(nameBtn, removeBtn);
+    favoritesListEl.append(itemEl);
+  });
+}
+
+/**
  * Opens the collapsible search form and focuses the input.
  */
 function openSearch() {
   if (headerMainEl && locationFormEl) {
+    closeFavoritesMenu();
     headerMainEl.classList.add("hidden");
     locationFormEl.classList.remove("hidden");
     searchToggleBtnEl?.setAttribute("aria-expanded", "true");
@@ -478,6 +694,7 @@ function renderCurrentWeather(location, weather) {
   weatherIconEl.textContent = weather.current.icon;
   weatherIconEl.setAttribute("aria-label", `${weather.current.condition} weather`);
 
+  updateFavoriteButton();
   renderWeatherEvents(weather);
 }
 
@@ -842,9 +1059,31 @@ searchCloseBtnEl?.addEventListener("click", () => {
   closeSearch();
 });
 
+favoriteToggleBtnEl?.addEventListener("click", () => {
+  toggleFavorite();
+});
+
+locationBtnEl?.addEventListener("click", () => {
+  toggleFavoritesMenu();
+});
+
+document.addEventListener("click", (event) => {
+  if (favoritesMenuEl && !favoritesMenuEl.classList.contains("hidden")) {
+    const header = document.querySelector(".weather-header");
+    if (header && !header.contains(event.target)) {
+      closeFavoritesMenu();
+    }
+  }
+});
+
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && locationFormEl && !locationFormEl.classList.contains("hidden")) {
-    closeSearch();
+  if (event.key === "Escape") {
+    if (locationFormEl && !locationFormEl.classList.contains("hidden")) {
+      closeSearch();
+    }
+    if (favoritesMenuEl && !favoritesMenuEl.classList.contains("hidden")) {
+      closeFavoritesMenu();
+    }
   }
 });
 

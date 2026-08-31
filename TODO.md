@@ -169,14 +169,16 @@ After completing each phase:
   - [x] Maintain clean, condensed header aesthetic
   - [x] Verified: Header displays city name with search icon button in collapsed state, opens auto-focused input on toggle, closes on Escape/close button, and auto-collapses on search success
 
-- **Phase 3b: Dynamic Favorites & localStorage**
-  - [ ] Implement localStorage helpers (loadFavorites, saveFavorites, addFavorite, removeFavorite)
-  - [ ] Add star icon toggle (★/☆) next to current location name to add/remove favorites
-  - [ ] Create favorites dropdown/menu UI displaying saved locations
+- **Phase 3b: Dynamic Favorites & localStorage** ✅
+  - [x] Implement localStorage helpers (loadFavorites, saveFavorites, addFavorite, removeFavorite)
+  - [x] Add star icon toggle (★/☆) next to current location name to add/remove favorites
+  - [x] Create favorites dropdown/menu UI displaying saved locations
+  - [x] Verified: Favorites persist in localStorage, star toggle accurately reflects active location status, dropdown lists saved favorites with quick selection and deletion, and outside click/Escape handles dismissal cleanly
 
-- **Phase 3c: Favorites Dropdown & Physical GPS Location**
+- **Phase 3c: Physical GPS Location and Reverse Geocoding**
   - [ ] Add "📍 Current Location" option at top of favorites list using `navigator.geolocation`
-  - [ ] Make current (GPS) location" the default location on startup
+  - [ ] Use reverse geocoding to find a location name from coordinates
+  - [ ] Make current (GPS) location the default location on startup
   - [ ] Allow switching between saved favorites and GPS location smoothly
 
 ## Phase 4: Weather Model Selection & Caching
