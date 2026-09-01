@@ -182,21 +182,21 @@ After completing each phase:
     - [x] Allow switching between saved favorites and GPS location smoothly
     - [x] Verified: Startup attempts GPS retrieval with Nominatim reverse geocoding + formatted coordinate fallback, dropdown contains pinned "📍 Current Location" with active state indicator, and switching between favorites, search, and GPS location works seamlessly
 
-## Phase 4: Weather Model Selection & Caching
+- **Phase 4: Weather Model Selection & Caching** ✅
 
-- **Phase 4a: Multi-Model API & Local Caching**
-  - [ ] Extend API requests to fetch data from specific provider models:
-    - [ ] `knmi_seamless` (Netherlands)
-    - [ ] `dwd_icon_seamless` (Germany)
-    - [ ] `meteofrance_seamless` (France)
-    - [ ] `ukmo_seamless` (UK)
-    - [ ] `ncep_gfs_seamless` (US)
-  - [ ] Cache model data in-memory per location to allow instant switching without refetching
+  - **Phase 4a: Multi-Model API & Local Caching** ✅
+    - [x] Extend API requests to fetch data from specific provider models:
+      - [x] `knmi_seamless` (Netherlands)
+      - [x] `dwd_icon_seamless` (Germany)
+      - [x] `meteofrance_seamless` (France)
+      - [x] `ukmo_seamless` (UK)
+      - [x] `ncep_gfs_seamless` (US)
+    - [x] Cache model data in-memory per location to allow instant switching without refetching
 
-- **Phase 4b: Model Selector UI**
-  - [ ] Create compact UI element in header/card showing active model
-  - [ ] Implement model picker dropdown/selector to switch active forecast
-  - [ ] Update temperature, precipitation text, and graphs according to selected model
+  - **Phase 4b: Model Selector UI** ✅
+    - [x] Create compact UI element in header/card showing active model
+    - [x] Implement model picker dropdown/selector to switch active forecast
+    - [x] Update temperature, precipitation text, and graphs according to selected model
 
 ## Phase 5: Weather Model Fusion
 

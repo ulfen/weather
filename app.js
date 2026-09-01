@@ -1235,6 +1235,11 @@ function setActiveModel(modelId) {
   const nextModel = WEATHER_MODEL_IDS.includes(modelId) ? modelId : WEATHER_MODEL_IDS[0];
   ACTIVE_MODEL_ID = nextModel;
 
+  if (modelPickerBtnEl) {
+    modelPickerBtnEl.classList.add("is-active");
+    modelPickerBtnEl.setAttribute("aria-pressed", "true");
+  }
+
   if (modelPickerValueEl) {
     modelPickerValueEl.textContent = MODEL_LABELS[nextModel] || nextModel;
   }
@@ -1262,6 +1267,11 @@ function closeModelMenu() {
 }
 
 function renderActiveModel() {
+  if (modelPickerBtnEl) {
+    modelPickerBtnEl.classList.toggle("is-active", true);
+    modelPickerBtnEl.setAttribute("aria-pressed", "true");
+  }
+
   if (modelPickerValueEl) {
     modelPickerValueEl.textContent = MODEL_LABELS[ACTIVE_MODEL_ID] || ACTIVE_MODEL_ID;
   }
@@ -1271,6 +1281,12 @@ function renderActiveModel() {
     optionEl.classList.toggle("is-active", isActive);
     optionEl.setAttribute("aria-checked", String(isActive));
   });
+}
+
+function setModelLoading(isLoading) {
+  if (!modelPickerBtnEl) return;
+  modelPickerBtnEl.classList.toggle("is-loading", isLoading);
+  modelPickerBtnEl.setAttribute("aria-busy", String(isLoading));
 }
 
 async function fetchWeatherModel(location, modelId = ACTIVE_MODEL_ID) {
@@ -1334,10 +1350,14 @@ function selectModel(modelId) {
   closeModelMenu();
 
   if (!cachedWeather) {
-    fetchWeather();
+    setModelLoading(true);
+    fetchWeather().finally(() => {
+      setModelLoading(false);
+    });
     return;
   }
 
+  setModelLoading(false);
   renderCurrentWeather(WEATHER_LOCATION, cachedWeather);
   renderHourlyForecast(cachedWeather.hourly, cachedWeather.hourlyGraph);
   renderForecast(cachedWeather.forecast);
@@ -1357,6 +1377,8 @@ async function fetchWeather() {
   } catch (error) {
     console.error("Weather fetch failed:", error);
     setWeatherFailure();
+  } finally {
+    setModelLoading(false);
   }
 }
 
