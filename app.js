@@ -40,6 +40,16 @@ const searchButtonEl = document.getElementById("search-button");
 const searchErrorEl = document.getElementById("search-error");
 
 const FAVORITES_STORAGE_KEY = "weather_favorites";
+const WEATHER_MODEL_IDS = [
+  "knmi_seamless",
+  "dwd_icon_seamless",
+  "meteofrance_seamless",
+  "ukmo_seamless",
+  "ncep_gfs_seamless",
+];
+const WEATHER_MODEL_CACHE = new Map();
+const WEATHER_MODEL_CACHE_TTL_MS = 10 * 60 * 1000;
+let ACTIVE_MODEL_ID = WEATHER_MODEL_IDS[0];
 
 const WEATHER_CODES = {
   0: { label: "Clear sky", day: "☀️", night: "🌙" },
@@ -107,8 +117,9 @@ function getWeatherCondition(code, isDay = true) {
  * @param {number} longitude - Geographic longitude
  * @returns {string} Fully formed forecast API URL
  */
-function buildWeatherUrl(latitude, longitude) {
-  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day,apparent_temperature,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,weather_code,is_day,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_hours,precipitation_probability_max,uv_index_max,moon_phase&timezone=auto&past_days=1&forecast_days=16`;
+function buildWeatherUrl(latitude, longitude, modelId = ACTIVE_MODEL_ID) {
+  const safeModelId = WEATHER_MODEL_IDS.includes(modelId) ? modelId : ACTIVE_MODEL_ID;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day,apparent_temperature,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,weather_code,is_day,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_hours,precipitation_probability_max,uv_index_max,moon_phase&timezone=auto&past_days=1&forecast_days=16&models=${encodeURIComponent(safeModelId)}`;
 }
 
 /**
@@ -1205,22 +1216,74 @@ function renderForecast(days) {
  * Fetches weather data from Open-Meteo API for current location.
  * Orchestrates fetching, parsing, and rendering, or displays error state.
  */
+function getModelCacheKey(location, modelId) {
+  return `${Number(location.latitude).toFixed(4)}:${Number(location.longitude).toFixed(4)}:${modelId}`;
+}
+
+async function fetchWeatherModel(location, modelId = ACTIVE_MODEL_ID) {
+  const cacheKey = getModelCacheKey(location, modelId);
+  const cachedEntry = WEATHER_MODEL_CACHE.get(cacheKey);
+
+  if (cachedEntry && Date.now() - cachedEntry.timestamp < WEATHER_MODEL_CACHE_TTL_MS) {
+    return cachedEntry.data;
+  }
+
+  const url = buildWeatherUrl(location.latitude, location.longitude, modelId);
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Open-Meteo request failed for ${modelId}: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const weather = parseWeatherData(data);
+
+  WEATHER_MODEL_CACHE.set(cacheKey, {
+    data: weather,
+    timestamp: Date.now(),
+  });
+
+  return weather;
+}
+
+async function fetchWeatherModels(location = WEATHER_LOCATION) {
+  const modelResults = await Promise.all(
+    WEATHER_MODEL_IDS.map(async (modelId) => {
+      try {
+        const weather = await fetchWeatherModel(location, modelId);
+        return [modelId, weather];
+      } catch (error) {
+        console.error(`Weather fetch failed for model ${modelId}:`, error);
+        return [modelId, null];
+      }
+    })
+  );
+
+  const modelWeather = Object.fromEntries(
+    modelResults.filter(([, weather]) => weather)
+  );
+
+  const activeWeather = modelWeather[ACTIVE_MODEL_ID]
+    || Object.values(modelWeather)[0]
+    || null;
+
+  return {
+    modelWeather,
+    activeWeather,
+  };
+}
+
 async function fetchWeather() {
-  const url = buildWeatherUrl(WEATHER_LOCATION.latitude, WEATHER_LOCATION.longitude);
-
   try {
-    const response = await fetch(url);
+    const { activeWeather } = await fetchWeatherModels(WEATHER_LOCATION);
 
-    if (!response.ok) {
-      throw new Error(`Open-Meteo request failed: ${response.status}`);
+    if (!activeWeather) {
+      throw new Error("No weather model data available.");
     }
 
-    const data = await response.json();
-    const weather = parseWeatherData(data);
-
-    renderCurrentWeather(WEATHER_LOCATION, weather);
-    renderHourlyForecast(weather.hourly, weather.hourlyGraph);
-    renderForecast(weather.forecast);
+    renderCurrentWeather(WEATHER_LOCATION, activeWeather);
+    renderHourlyForecast(activeWeather.hourly, activeWeather.hourlyGraph);
+    renderForecast(activeWeather.forecast);
   } catch (error) {
     console.error("Weather fetch failed:", error);
     setWeatherFailure();
