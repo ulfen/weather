@@ -17,6 +17,20 @@
           <span class="location-chevron" aria-hidden="true">▾</span>
         </button>
         <div class="header-actions">
+          <div class="model-picker" aria-label="Weather model selector">
+            <button type="button" class="model-picker-btn" id="model-picker-btn" aria-label="Select weather model" aria-expanded="false">
+              <span class="model-picker-label">Model</span>
+              <span class="model-picker-value" id="model-picker-value">KNMI</span>
+              <span class="model-picker-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div class="model-picker-menu hidden" id="model-picker-menu" role="menu" aria-label="Weather model options">
+              <button type="button" class="model-option is-active" data-model="knmi_seamless" role="menuitemradio" aria-checked="true">KNMI</button>
+              <button type="button" class="model-option" data-model="dwd_icon_seamless" role="menuitemradio" aria-checked="false">DWD</button>
+              <button type="button" class="model-option" data-model="meteofrance_seamless" role="menuitemradio" aria-checked="false">Météo France</button>
+              <button type="button" class="model-option" data-model="ukmo_seamless" role="menuitemradio" aria-checked="false">UKMO</button>
+              <button type="button" class="model-option" data-model="ncep_gfs_seamless" role="menuitemradio" aria-checked="false">NCEP</button>
+            </div>
+          </div>
           <button type="button" class="icon-btn favorite-toggle-btn" id="favorite-toggle" aria-label="Add to favorites" aria-pressed="false">☆</button>
           <button type="button" class="icon-btn search-toggle-btn" id="search-toggle" aria-label="Search location" aria-expanded="false">🔍</button>
         </div>

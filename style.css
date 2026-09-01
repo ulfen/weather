@@ -122,6 +122,85 @@ body {
   flex-shrink: 0;
 }
 
+.model-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.model-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 5px 10px 5px 8px;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.model-picker-btn:hover {
+  background: var(--border);
+}
+
+.model-picker-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.model-picker-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.model-picker-chevron {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.model-picker-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 35;
+  min-width: 150px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 18px var(--shadow);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.model-picker-menu.hidden {
+  display: none;
+}
+
+.model-option {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.model-option:hover,
+.model-option.is-active {
+  background: var(--panel);
+}
+
 .favorite-toggle-btn {
   font-size: 1.15rem;
   line-height: 1;

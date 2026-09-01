@@ -38,6 +38,10 @@ const forecastRowEl = document.getElementById("forecast-row");
 const locationInputEl = document.getElementById("location-input");
 const searchButtonEl = document.getElementById("search-button");
 const searchErrorEl = document.getElementById("search-error");
+const modelPickerBtnEl = document.getElementById("model-picker-btn");
+const modelPickerValueEl = document.getElementById("model-picker-value");
+const modelPickerMenuEl = document.getElementById("model-picker-menu");
+const modelOptionEls = Array.from(document.querySelectorAll(".model-option"));
 
 const FAVORITES_STORAGE_KEY = "weather_favorites";
 const WEATHER_MODEL_IDS = [
@@ -47,6 +51,13 @@ const WEATHER_MODEL_IDS = [
   "ukmo_seamless",
   "ncep_gfs_seamless",
 ];
+const MODEL_LABELS = {
+  knmi_seamless: "KNMI",
+  dwd_icon_seamless: "DWD",
+  meteofrance_seamless: "Météo France",
+  ukmo_seamless: "UKMO",
+  ncep_gfs_seamless: "NCEP",
+};
 const WEATHER_MODEL_CACHE = new Map();
 const WEATHER_MODEL_CACHE_TTL_MS = 10 * 60 * 1000;
 let ACTIVE_MODEL_ID = WEATHER_MODEL_IDS[0];
@@ -1220,6 +1231,48 @@ function getModelCacheKey(location, modelId) {
   return `${Number(location.latitude).toFixed(4)}:${Number(location.longitude).toFixed(4)}:${modelId}`;
 }
 
+function setActiveModel(modelId) {
+  const nextModel = WEATHER_MODEL_IDS.includes(modelId) ? modelId : WEATHER_MODEL_IDS[0];
+  ACTIVE_MODEL_ID = nextModel;
+
+  if (modelPickerValueEl) {
+    modelPickerValueEl.textContent = MODEL_LABELS[nextModel] || nextModel;
+  }
+
+  modelOptionEls.forEach((optionEl) => {
+    const isActive = optionEl.dataset.model === nextModel;
+    optionEl.classList.toggle("is-active", isActive);
+    optionEl.setAttribute("aria-checked", String(isActive));
+  });
+
+  return nextModel;
+}
+
+function toggleModelMenu() {
+  if (!modelPickerMenuEl || !modelPickerBtnEl) return;
+  const isHidden = modelPickerMenuEl.classList.contains("hidden");
+  modelPickerMenuEl.classList.toggle("hidden", !isHidden);
+  modelPickerBtnEl.setAttribute("aria-expanded", String(isHidden));
+}
+
+function closeModelMenu() {
+  if (!modelPickerMenuEl || !modelPickerBtnEl) return;
+  modelPickerMenuEl.classList.add("hidden");
+  modelPickerBtnEl.setAttribute("aria-expanded", "false");
+}
+
+function renderActiveModel() {
+  if (modelPickerValueEl) {
+    modelPickerValueEl.textContent = MODEL_LABELS[ACTIVE_MODEL_ID] || ACTIVE_MODEL_ID;
+  }
+
+  modelOptionEls.forEach((optionEl) => {
+    const isActive = optionEl.dataset.model === ACTIVE_MODEL_ID;
+    optionEl.classList.toggle("is-active", isActive);
+    optionEl.setAttribute("aria-checked", String(isActive));
+  });
+}
+
 async function fetchWeatherModel(location, modelId = ACTIVE_MODEL_ID) {
   const cacheKey = getModelCacheKey(location, modelId);
   const cachedEntry = WEATHER_MODEL_CACHE.get(cacheKey);
@@ -1273,6 +1326,23 @@ async function fetchWeatherModels(location = WEATHER_LOCATION) {
   };
 }
 
+function selectModel(modelId) {
+  const nextModel = setActiveModel(modelId);
+  const cacheKey = getModelCacheKey(WEATHER_LOCATION, nextModel);
+  const cachedWeather = WEATHER_MODEL_CACHE.get(cacheKey)?.data;
+
+  closeModelMenu();
+
+  if (!cachedWeather) {
+    fetchWeather();
+    return;
+  }
+
+  renderCurrentWeather(WEATHER_LOCATION, cachedWeather);
+  renderHourlyForecast(cachedWeather.hourly, cachedWeather.hourlyGraph);
+  renderForecast(cachedWeather.forecast);
+}
+
 async function fetchWeather() {
   try {
     const { activeWeather } = await fetchWeatherModels(WEATHER_LOCATION);
@@ -1293,6 +1363,24 @@ async function fetchWeather() {
 locationFormEl?.addEventListener("submit", (event) => {
   event.preventDefault();
   searchLocation();
+});
+
+modelPickerBtnEl?.addEventListener("click", () => {
+  toggleModelMenu();
+});
+
+modelOptionEls.forEach((optionEl) => {
+  optionEl.addEventListener("click", () => {
+    selectModel(optionEl.dataset.model);
+  });
+});
+
+document.addEventListener("click", (event) => {
+  if (!modelPickerBtnEl || !modelPickerMenuEl) return;
+  const clickedInside = modelPickerBtnEl.contains(event.target) || modelPickerMenuEl.contains(event.target);
+  if (!clickedInside) {
+    closeModelMenu();
+  }
 });
 
 searchToggleBtnEl?.addEventListener("click", () => {
