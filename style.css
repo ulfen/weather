@@ -95,8 +95,9 @@ body {
   padding: 0;
   font-family: inherit;
   cursor: pointer;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: calc(100% - 170px);
   text-align: left;
 }
 
@@ -126,20 +127,22 @@ body {
   position: relative;
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .model-picker-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--panel);
   color: var(--text);
-  padding: 5px 10px 5px 8px;
+  padding: 5px 8px;
   font: inherit;
   cursor: pointer;
   transition: background 0.2s ease;
+  max-width: 110px;
 }
 
 .model-picker-btn:hover {
@@ -147,14 +150,16 @@ body {
 }
 
 .model-picker-label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
+  display: none;
 }
 
 .model-picker-value {
-  font-size: 0.8rem;
+  display: inline-block;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
