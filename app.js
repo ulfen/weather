@@ -967,7 +967,7 @@ function getWeatherEvents(weather) {
     events.push({ icon: "☀️", text: `High UV index: ${todayRange.uvIndex}` });
   }
 
-  if (current.visibility < 1000) {
+  if (typeof current.visibility === "number" && current.visibility < 1000) {
     const visibilityText = current.visibility < 100
       ? "less than 100 m"
       : `${Math.round(current.visibility / 100) * 100} m`;
@@ -1062,7 +1062,7 @@ function renderHourlyPrecipBars(precipHours) {
   const numBars = precipHours
     .reduce((count, hour) => {
       const precipitation = hour.precipitation;
-      const probability = hour.precipitationProbability;
+      const probability = hour.precipitationProbability === null ? 0.333 : hour.precipitationProbability;
 
       if (
         typeof precipitation !== "number" ||
@@ -1086,7 +1086,7 @@ function renderHourlyPrecipBars(precipHours) {
   const barsHtml = precipHours
     .map((hour) => {
       const precipitation = hour.precipitation;
-      const probability = hour.precipitationProbability;
+      const probability = hour.precipitationProbability === null ? 0.333 : hour.precipitationProbability;
 
       if (
         typeof precipitation !== "number" ||
