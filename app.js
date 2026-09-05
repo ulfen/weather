@@ -44,6 +44,7 @@ const modelPickerMenuEl = document.getElementById("model-picker-menu");
 const modelOptionEls = Array.from(document.querySelectorAll(".model-option"));
 
 const FAVORITES_STORAGE_KEY = "weather_favorites";
+const MODEL_FUSION_ID = "fusion";
 const WEATHER_MODEL_IDS = [
   "knmi_seamless",
   "dwd_icon_seamless",
@@ -51,7 +52,12 @@ const WEATHER_MODEL_IDS = [
   "ukmo_seamless",
   "ncep_gfs_seamless",
 ];
+const ALL_MODEL_CHOICES = [
+  MODEL_FUSION_ID,
+  ...WEATHER_MODEL_IDS,
+];
 const MODEL_LABELS = {
+  fusion: "Model Fusion",
   knmi_seamless: "KNMI",
   dwd_icon_seamless: "DWD",
   meteofrance_seamless: "Météo France",
@@ -60,7 +66,7 @@ const MODEL_LABELS = {
 };
 const WEATHER_MODEL_CACHE = new Map();
 const WEATHER_MODEL_CACHE_TTL_MS = 10 * 60 * 1000;
-let ACTIVE_MODEL_ID = WEATHER_MODEL_IDS[0];
+let ACTIVE_MODEL_ID = MODEL_FUSION_ID;
 
 const WEATHER_CODES = {
   0: { label: "Clear sky", day: "☀️", night: "🌙" },
@@ -860,6 +866,7 @@ function parseWeatherData(data) {
   return {
     current: {
       temperature: currentTemp,
+      code: data.current.weather_code,
       condition: condition.label,
       icon: condition.icon,
       isDay,
@@ -880,6 +887,267 @@ function parseWeatherData(data) {
     hourly,
     hourlyGraph,
     forecast,
+  };
+}
+
+/**
+ * Calculates mathematical mean of a numeric array.
+ * @param {number[]} values
+ * @returns {number}
+ */
+function calculateMean(values) {
+  if (!Array.isArray(values) || values.length === 0) return 0;
+  const sum = values.reduce((acc, val) => acc + (typeof val === "number" ? val : 0), 0);
+  return sum / values.length;
+}
+
+/**
+ * Calculates the consensus (mode / severity weighted) weather code from multiple models.
+ * @param {number[]} codes
+ * @returns {number}
+ */
+function getConsensusWeatherCode(codes) {
+  if (!Array.isArray(codes) || codes.length === 0) return 0;
+  const counts = new Map();
+  for (const code of codes) {
+    if (typeof code === "number") {
+      counts.set(code, (counts.get(code) || 0) + 1);
+    }
+  }
+  let bestCode = codes[0];
+  let maxCount = -1;
+  for (const [code, count] of counts.entries()) {
+    if (count > maxCount || (count === maxCount && code > bestCode)) {
+      maxCount = count;
+      bestCode = code;
+    }
+  }
+  return bestCode;
+}
+
+/**
+ * Computes multi-model agreement score (0.25 to 1.0) for precipitation forecast.
+ * @param {number[]} probabilities - Array of model probabilities (0-100)
+ * @param {number[]} amounts - Array of model precipitation amounts (mm)
+ * @returns {number} Value between 0.25 and 1.0
+ */
+function calculatePrecipAgreement(probabilities, amounts) {
+  if (!Array.isArray(probabilities) || probabilities.length === 0) return 1.0;
+  const total = probabilities.length;
+  const rainCount = probabilities.filter((prob, idx) => {
+    const amt = amounts[idx];
+    return (typeof amt === "number" && amt >= 0.1) || (typeof prob === "number" && prob >= 20);
+  }).length;
+
+  const rainRatio = rainCount / total;
+  const consensusRatio = rainRatio >= 0.5 ? rainRatio : 1 - rainRatio;
+  return Math.min(1.0, Math.max(0.25, consensusRatio));
+}
+
+/**
+ * Fuses weather forecast data from multiple models into an ensemble data model.
+ * @param {Object.<string, object>} modelWeatherMap - Map of modelId -> parsed weather data
+ * @returns {object|null} Fused weather object matching parseWeatherData structure with ensemble statistics
+ */
+function computeFusedWeatherData(modelWeatherMap) {
+  if (!modelWeatherMap || typeof modelWeatherMap !== "object") return null;
+  const validModels = Object.values(modelWeatherMap).filter(
+    (m) => m && typeof m === "object" && m.current && Array.isArray(m.hourly) && Array.isArray(m.forecast)
+  );
+  if (validModels.length === 0) return null;
+  if (validModels.length === 1) return validModels[0];
+
+  const primary = validModels[0];
+
+  // 1. Current Weather Fusion
+  const currentTemps = validModels.map((m) => m.current.temperature).filter((t) => typeof t === "number");
+  const currentApparent = validModels.map((m) => m.current.apparentTemperature).filter((t) => typeof t === "number");
+  const currentWinds = validModels.map((m) => m.current.windSpeed).filter((w) => typeof w === "number");
+  const currentGusts = validModels.map((m) => m.current.windGusts).filter((g) => typeof g === "number");
+  const currentDirections = validModels.map((m) => m.current.windDirection).filter((d) => typeof d === "number");
+  const currentVisibilities = validModels.map((m) => m.current.visibility).filter((v) => typeof v === "number");
+  const currentCodes = validModels.map((m) => m.current.code).filter((cd) => typeof cd === "number");
+
+  const isDay = primary.current.isDay;
+  const consensusCurrentCode = getConsensusWeatherCode(currentCodes.length > 0 ? currentCodes : [0]);
+  const condition = getWeatherCondition(consensusCurrentCode, isDay);
+
+  const fusedCurrent = {
+    temperature: Math.round(calculateMean(currentTemps)),
+    minTemp: Math.min(...currentTemps),
+    maxTemp: Math.max(...currentTemps),
+    code: consensusCurrentCode,
+    condition: condition.label,
+    icon: condition.icon,
+    isDay,
+    apparentTemperature: calculateMean(currentApparent),
+    windSpeed: calculateMean(currentWinds),
+    windDirection: calculateMean(currentDirections),
+    windGusts: calculateMean(currentGusts),
+    visibility: calculateMean(currentVisibilities),
+  };
+
+  // 2. Hourly Timeline Columns Fusion
+  const numHourlyCols = primary.hourly.length;
+  const fusedHourly = [];
+
+  for (let c = 0; c < numHourlyCols; c++) {
+    const colTime = primary.hourly[c].time;
+    const isCurrent = primary.hourly[c].isCurrent;
+    const colIsDay = primary.hourly[c].isDay;
+
+    const colTemps = validModels.map((m) => m.hourly[c]?.temperature).filter((t) => typeof t === "number");
+    const colCodes = validModels.map((m) => m.hourly[c]?.code).filter((cd) => typeof cd === "number");
+    const colVis = validModels.map((m) => m.hourly[c]?.visibility).filter((v) => typeof v === "number");
+    const colPrecips = validModels.map((m) => m.hourly[c]?.precipitation).filter((p) => typeof p === "number");
+    const colProbs = validModels.map((m) => m.hourly[c]?.precipitationProbability).filter((pr) => typeof pr === "number");
+
+    // Sub-hour precipitation breakdown (up to 3 hours per timeslot)
+    const numSubHours = primary.hourly[c].precipHours ? primary.hourly[c].precipHours.length : 0;
+    const fusedPrecipHours = [];
+
+    for (let s = 0; s < numSubHours; s++) {
+      const subTime = primary.hourly[c].precipHours[s].time;
+      const subPrecips = validModels.map((m) => m.hourly[c]?.precipHours?.[s]?.precipitation).filter((p) => typeof p === "number");
+      const subProbs = validModels.map((m) => m.hourly[c]?.precipHours?.[s]?.precipitationProbability).filter((pr) => typeof pr === "number");
+
+      const avgSubPrecip = calculateMean(subPrecips);
+      const avgSubProb = Math.round(calculateMean(subProbs));
+      const maxSubProb = subProbs.length > 0 ? Math.max(...subProbs) : 0;
+
+      let peakSubPrecip = avgSubPrecip;
+      if (subProbs.length > 0) {
+        const peakIdx = subProbs.indexOf(maxSubProb);
+        if (peakIdx >= 0 && typeof subPrecips[peakIdx] === "number") {
+          peakSubPrecip = subPrecips[peakIdx];
+        }
+      }
+
+      const agreement = calculatePrecipAgreement(subProbs, subPrecips);
+
+      fusedPrecipHours.push({
+        time: subTime,
+        precipitation: avgSubPrecip,
+        peakPrecipitation: peakSubPrecip,
+        precipitationProbability: avgSubProb,
+        maxProbability: maxSubProb,
+        agreement,
+      });
+    }
+
+    fusedHourly.push({
+      time: colTime,
+      code: getConsensusWeatherCode(colCodes),
+      temperature: Math.round(calculateMean(colTemps)),
+      minTemp: Math.min(...colTemps),
+      maxTemp: Math.max(...colTemps),
+      isDay: colIsDay,
+      precipitation: calculateMean(colPrecips),
+      precipitationProbability: Math.round(calculateMean(colProbs)),
+      visibility: calculateMean(colVis),
+      precipHours: fusedPrecipHours,
+      isCurrent,
+    });
+  }
+
+  // 3. Hourly Temperature Graph Fusion (1-hour resolution)
+  const numGraphPoints = primary.hourlyGraph ? primary.hourlyGraph.length : 0;
+  const fusedHourlyGraph = [];
+
+  for (let p = 0; p < numGraphPoints; p++) {
+    const ptTime = primary.hourlyGraph[p].time;
+    const ptTemps = validModels.map((m) => m.hourlyGraph?.[p]?.temperature).filter((t) => typeof t === "number");
+    const avgTemp = Math.round(calculateMean(ptTemps));
+    const minTemp = ptTemps.length > 0 ? Math.min(...ptTemps) : avgTemp;
+    const maxTemp = ptTemps.length > 0 ? Math.max(...ptTemps) : avgTemp;
+
+    fusedHourlyGraph.push({
+      time: ptTime,
+      temperature: avgTemp,
+      minTemp,
+      maxTemp,
+      tempDelta: maxTemp - minTemp,
+    });
+  }
+
+  // 4. Daily Forecast Fusion
+  const numDays = primary.forecast.length;
+  const fusedForecast = [];
+
+  for (let d = 0; d < numDays; d++) {
+    const dayDate = primary.forecast[d].date;
+    const isYesterday = primary.forecast[d].isYesterday;
+    const isToday = primary.forecast[d].isToday;
+
+    const dayCodes = validModels.map((m) => m.forecast[d]?.code).filter((cd) => typeof cd === "number");
+    const dayMaxes = validModels.map((m) => m.forecast[d]?.max).filter((t) => typeof t === "number");
+    const dayMins = validModels.map((m) => m.forecast[d]?.min).filter((t) => typeof t === "number");
+    const dayPrecips = validModels.map((m) => m.forecast[d]?.precipitation).filter((p) => typeof p === "number");
+    const dayPrecipHours = validModels.map((m) => m.forecast[d]?.precipitationHours).filter((h) => typeof h === "number");
+    const dayProbs = validModels.map((m) => m.forecast[d]?.precipitationProbability).filter((pr) => typeof pr === "number");
+
+    const avgMax = Math.round(calculateMean(dayMaxes));
+    const avgMin = Math.round(calculateMean(dayMins));
+
+    fusedForecast.push({
+      date: dayDate,
+      code: getConsensusWeatherCode(dayCodes),
+      max: avgMax,
+      min: avgMin,
+      minBound: dayMins.length > 0 ? Math.min(...dayMins) : avgMin,
+      maxBound: dayMaxes.length > 0 ? Math.max(...dayMaxes) : avgMax,
+      precipitation: calculateMean(dayPrecips),
+      precipitationHours: Math.round(calculateMean(dayPrecipHours)),
+      precipitationProbability: Math.round(calculateMean(dayProbs)),
+      isYesterday,
+      isToday,
+    });
+  }
+
+  // 5. Today Range Fusion
+  const todayMaxes = validModels.map((m) => m.todayRange?.max).filter((v) => typeof v === "number");
+  const todayMins = validModels.map((m) => m.todayRange?.min).filter((v) => typeof v === "number");
+  const todayPrecips = validModels.map((m) => m.todayRange?.precipitation).filter((v) => typeof v === "number");
+  const todayPrecipHours = validModels.map((m) => m.todayRange?.precipitationHours).filter((v) => typeof v === "number");
+  const todayProbs = validModels.map((m) => m.todayRange?.precipitationProbability).filter((v) => typeof v === "number");
+  const todayUv = validModels.map((m) => m.todayRange?.uvIndex).filter((v) => typeof v === "number");
+
+  const todayMax = Math.round(calculateMean(todayMaxes));
+  const todayMin = Math.round(calculateMean(todayMins));
+
+  const fusedTodayRange = {
+    max: todayMax,
+    min: todayMin,
+    difference: todayMax - todayMin,
+    precipitation: calculateMean(todayPrecips),
+    precipitationHours: Math.round(calculateMean(todayPrecipHours)),
+    precipitationProbability: Math.round(calculateMean(todayProbs)),
+    uvIndex: Math.round(calculateMean(todayUv)),
+    moonPhase: primary.todayRange?.moonPhase ?? 0,
+  };
+
+  // 6. Today Hourly Fusion
+  const numTodayHourly = primary.todayHourly ? primary.todayHourly.length : 0;
+  const fusedTodayHourly = [];
+  for (let th = 0; th < numTodayHourly; th++) {
+    const thTime = primary.todayHourly[th].time;
+    const thPrecips = validModels.map((m) => m.todayHourly?.[th]?.precipitation).filter((p) => typeof p === "number");
+    const thProbs = validModels.map((m) => m.todayHourly?.[th]?.precipitationProbability).filter((pr) => typeof pr === "number");
+    fusedTodayHourly.push({
+      time: thTime,
+      precipitation: calculateMean(thPrecips),
+      precipitationProbability: Math.round(calculateMean(thProbs)),
+    });
+  }
+
+  return {
+    current: fusedCurrent,
+    todayRange: fusedTodayRange,
+    todayHourly: fusedTodayHourly,
+    hourly: fusedHourly,
+    hourlyGraph: fusedHourlyGraph,
+    forecast: fusedForecast,
+    isFusion: true,
   };
 }
 
@@ -1232,7 +1500,7 @@ function getModelCacheKey(location, modelId) {
 }
 
 function setActiveModel(modelId) {
-  const nextModel = WEATHER_MODEL_IDS.includes(modelId) ? modelId : WEATHER_MODEL_IDS[0];
+  const nextModel = ALL_MODEL_CHOICES.includes(modelId) ? modelId : MODEL_FUSION_ID;
   ACTIVE_MODEL_ID = nextModel;
 
   if (modelPickerBtnEl) {
@@ -1332,9 +1600,12 @@ async function fetchWeatherModels(location = WEATHER_LOCATION) {
     modelResults.filter(([, weather]) => weather)
   );
 
-  const activeWeather = modelWeather[ACTIVE_MODEL_ID]
-    || Object.values(modelWeather)[0]
-    || null;
+  let activeWeather = null;
+  if (ACTIVE_MODEL_ID === MODEL_FUSION_ID) {
+    activeWeather = computeFusedWeatherData(modelWeather);
+  } else {
+    activeWeather = modelWeather[ACTIVE_MODEL_ID] || computeFusedWeatherData(modelWeather);
+  }
 
   return {
     modelWeather,
@@ -1344,10 +1615,40 @@ async function fetchWeatherModels(location = WEATHER_LOCATION) {
 
 function selectModel(modelId) {
   const nextModel = setActiveModel(modelId);
+  closeModelMenu();
+
+  if (nextModel === MODEL_FUSION_ID) {
+    const allCached = WEATHER_MODEL_IDS.every((id) => {
+      const cacheKey = getModelCacheKey(WEATHER_LOCATION, id);
+      const entry = WEATHER_MODEL_CACHE.get(cacheKey);
+      return entry && Date.now() - entry.timestamp < WEATHER_MODEL_CACHE_TTL_MS;
+    });
+
+    if (allCached) {
+      const modelWeather = {};
+      WEATHER_MODEL_IDS.forEach((id) => {
+        const cacheKey = getModelCacheKey(WEATHER_LOCATION, id);
+        modelWeather[id] = WEATHER_MODEL_CACHE.get(cacheKey)?.data;
+      });
+      const fusedWeather = computeFusedWeatherData(modelWeather);
+      if (fusedWeather) {
+        setModelLoading(false);
+        renderCurrentWeather(WEATHER_LOCATION, fusedWeather);
+        renderHourlyForecast(fusedWeather.hourly, fusedWeather.hourlyGraph);
+        renderForecast(fusedWeather.forecast);
+        return;
+      }
+    }
+
+    setModelLoading(true);
+    fetchWeather().finally(() => {
+      setModelLoading(false);
+    });
+    return;
+  }
+
   const cacheKey = getModelCacheKey(WEATHER_LOCATION, nextModel);
   const cachedWeather = WEATHER_MODEL_CACHE.get(cacheKey)?.data;
-
-  closeModelMenu();
 
   if (!cachedWeather) {
     setModelLoading(true);

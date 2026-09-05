@@ -198,22 +198,23 @@ After completing each phase:
     - [x] Implement model picker dropdown/selector to switch active forecast
     - [x] Update temperature, precipitation text, and graphs according to selected model
 
-## Phase 5: Weather Model Fusion
+- **Phase 5: Weather Model Fusion**
 
-- **Phase 5a: Model Fusion Data Processing**
-  - [ ] Add "Model Fusion" as a selectable option (and default option)
-  - [ ] Calculate multi-model average temperature and min/max envelope per hour
-  - [ ] Calculate multi-model rain amounts, probabilities, and model agreement metrics
+  - **Phase 5a: Model Fusion Data Processing** ✅
+    - [x] Add "Model Fusion" as a selectable option (and default option)
+    - [x] Calculate multi-model average temperature and min/max envelope per hour
+    - [x] Calculate multi-model rain amounts, probabilities, and model agreement metrics
+    - [x] Verified: Real Open-Meteo multi-model fetch test verified ensemble temperature means, min/max uncertainty bounds, consensus weather codes, sub-hour rain agreement metrics, and fallback behavior
 
-- **Phase 5b: Temperature Graph Fusion**
-  - [ ] Render average temperature curve for the main graph line
-  - [ ] Render shaded uncertainty area between min and max bounds from all models
-  - [ ] Keep graph clean and responsive
+  - **Phase 5b: Temperature Graph Fusion**
+    - [ ] Render average temperature curve for the main graph line
+    - [ ] Render shaded uncertainty area between min and max bounds from all models
+    - [ ] Keep graph clean and responsive
 
-- **Phase 5c: Rain Forecast Fusion**
-  - [ ] Display blended rain amount and probability in forecast text
-  - [ ] Render rain bars based on model with highest probability
-  - [ ] Visualize model agreement by adjusting bar brightness/opacity (lighter = less agreement)
+  - **Phase 5c: Rain Forecast Fusion**
+    - [ ] Display blended rain amount and probability in forecast text
+    - [ ] Render rain bars based on model with highest probability
+    - [ ] Visualize model agreement by adjusting bar brightness/opacity (lighter = less agreement)
 
 ## Phase 6: Installable Progressive Web App (PWA)
 
