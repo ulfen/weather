@@ -206,10 +206,11 @@ After completing each phase:
     - [x] Calculate multi-model rain amounts, probabilities, and model agreement metrics
     - [x] Verified: Real Open-Meteo multi-model fetch test verified ensemble temperature means, min/max uncertainty bounds, consensus weather codes, sub-hour rain agreement metrics, and fallback behavior
 
-  - **Phase 5b: Temperature Graph Fusion**
-    - [ ] Render average temperature curve for the main graph line
-    - [ ] Render shaded uncertainty area between min and max bounds from all models
-    - [ ] Keep graph clean and responsive
+  - **Phase 5b: Temperature Graph Fusion** ✅
+    - [x] Render average temperature curve for the main graph line
+    - [x] Render shaded uncertainty area between min and max bounds from all models
+    - [x] Keep graph clean and responsive
+    - [x] Verified: SVG rendering dynamically generates closed shaded polygon for multi-model [min, max] temperature spread, preserves clean polyline for single models, and adapts cleanly to light and dark themes
 
   - **Phase 5c: Rain Forecast Fusion**
     - [ ] Display blended rain amount and probability in forecast text

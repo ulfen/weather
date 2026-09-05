@@ -1288,30 +1288,59 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
 
   const totalWidth = numCols * colWidth;
   // Span the graph from the center of column 0 to the center of column (numCols - 1)
-  const maxSpanHours = (numCols - 1) * 3; // 21 hours for 8 columns (hours 0 to 21)
+  const maxSpanHours = (numCols - 1) * 3;
   const pointsData = graphData.slice(0, maxSpanHours + 1);
 
-  const temps = pointsData.map((d) => d.temperature);
-  const minTemp = Math.min(...temps);
-  const maxTemp = Math.max(...temps);
+  const minTemps = pointsData.map((d) => (typeof d.minTemp === "number" ? d.minTemp : d.temperature));
+  const maxTemps = pointsData.map((d) => (typeof d.maxTemp === "number" ? d.maxTemp : d.temperature));
+  const minTemp = Math.min(...minTemps);
+  const maxTemp = Math.max(...maxTemps);
   const tempDelta = maxTemp - minTemp;
 
   const startX = colWidth / 2;
   const hourStepX = colWidth / 3;
 
-  const points = pointsData.map((d, index) => {
+  const meanPoints = [];
+  const upperPoints = [];
+  const lowerPoints = [];
+
+  const hasUncertainty = pointsData.some(
+    (d) => typeof d.minTemp === "number" && typeof d.maxTemp === "number" && d.maxTemp > d.minTemp
+  );
+
+  pointsData.forEach((d, index) => {
     const x = startX + index * hourStepX;
     let y = graphHeight / 2;
     if (tempDelta > 0) {
       y = pad + ((maxTemp - d.temperature) / tempDelta) * (graphHeight - 2 * pad);
     }
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
+    meanPoints.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+
+    if (hasUncertainty) {
+      const minT = typeof d.minTemp === "number" ? d.minTemp : d.temperature;
+      const maxT = typeof d.maxTemp === "number" ? d.maxTemp : d.temperature;
+      let yUpper = y;
+      let yLower = y;
+      if (tempDelta > 0) {
+        yUpper = pad + ((maxTemp - maxT) / tempDelta) * (graphHeight - 2 * pad);
+        yLower = pad + ((maxTemp - minT) / tempDelta) * (graphHeight - 2 * pad);
+      }
+      upperPoints.push(`${x.toFixed(1)},${yUpper.toFixed(1)}`);
+      lowerPoints.unshift(`${x.toFixed(1)},${yLower.toFixed(1)}`);
+    }
   });
 
-  const pointsString = points.join(" ");
+  let uncertaintySvg = "";
+  if (hasUncertainty) {
+    const polygonPoints = [...upperPoints, ...lowerPoints].join(" ");
+    uncertaintySvg = `<polygon class="hourly-graph-uncertainty" points="${polygonPoints}" />`;
+  }
+
+  const pointsString = meanPoints.join(" ");
 
   return `
     <svg class="hourly-graph" viewBox="0 0 ${totalWidth} ${graphHeight}" width="${totalWidth}" height="${graphHeight}" aria-hidden="true">
+      ${uncertaintySvg}
       <polyline class="hourly-graph-line" points="${pointsString}" />
     </svg>
   `.trim();

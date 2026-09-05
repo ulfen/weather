@@ -680,6 +680,20 @@ body {
   pointer-events: none;
 }
 
+.hourly-graph-uncertainty {
+  fill: rgba(59, 130, 246, 0.16);
+  stroke: rgba(59, 130, 246, 0.28);
+  stroke-width: 0.75px;
+  stroke-dasharray: 2, 2;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hourly-graph-uncertainty {
+    fill: rgba(96, 165, 250, 0.2);
+    stroke: rgba(96, 165, 250, 0.35);
+  }
+}
+
 .hourly-graph-line {
   fill: none;
   stroke: var(--text);
