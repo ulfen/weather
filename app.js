@@ -1356,23 +1356,22 @@ function renderHourlyPrecipBars(precipHours) {
     return '';
   }
 
-  const numBars = precipHours
-    .reduce((count, hour) => {
-      const precipitation = hour.precipitation;
-      const probability = hour.precipitationProbability === null ? 0.333 : hour.precipitationProbability;
+  const numBars = precipHours.reduce((count, hour) => {
+    const precipitation = typeof hour.peakPrecipitation === 'number' ? hour.peakPrecipitation : hour.precipitation;
+    const probability = typeof hour.maxProbability === 'number'
+      ? hour.maxProbability
+      : (hour.precipitationProbability === null ? 0.333 : hour.precipitationProbability);
 
-      if (
-        typeof precipitation !== "number" ||
-        typeof probability !== "number" ||
-        precipitation <= 0 ||
-        probability <= 0
-      ) {
-        return count;
-      }
-      else {
-        return count + 1;
-      }
-    }, 0);
+    if (
+      typeof precipitation !== "number" ||
+      typeof probability !== "number" ||
+      precipitation <= 0 ||
+      probability <= 0
+    ) {
+      return count;
+    }
+    return count + 1;
+  }, 0);
 
   if (numBars === 0) {
     return '';
@@ -1382,8 +1381,10 @@ function renderHourlyPrecipBars(precipHours) {
 
   const barsHtml = precipHours
     .map((hour) => {
-      const precipitation = hour.precipitation;
-      const probability = hour.precipitationProbability === null ? 0.333 : hour.precipitationProbability;
+      const precipitation = typeof hour.peakPrecipitation === 'number' ? hour.peakPrecipitation : hour.precipitation;
+      const probability = typeof hour.maxProbability === 'number'
+        ? hour.maxProbability
+        : (hour.precipitationProbability === null ? 0.333 : hour.precipitationProbability);
 
       if (
         typeof precipitation !== "number" ||
@@ -1398,10 +1399,15 @@ function renderHourlyPrecipBars(precipHours) {
       const p = Math.min(Math.max(0.0, precipitation / maxScale), 1.0);
       const heightPercent = Math.min(100, 2 + 75 * Math.log10(1.0 + 20.0 * p));
 
-      // Opacity: map probability (25-75) to 0.125 - 0.875
-      const opacity = Math.min(Math.max(0.125, 3.0 * probability / 200 - 0.25), 0.875);
+      // Base Opacity from probability: map probability (25-75) to 0.125 - 0.875
+      const baseOpacity = Math.min(Math.max(0.125, 3.0 * probability / 200 - 0.25), 0.875);
 
-      // Intensity class
+      // Agreement Factor: lower agreement makes bar lighter / more translucent
+      const agreement = typeof hour.agreement === 'number' ? hour.agreement : 1.0;
+      const agreementFactor = Math.min(1.0, Math.max(0.35, agreement));
+      const opacity = (baseOpacity * agreementFactor).toFixed(3);
+
+      // Intensity class based on peak precipitation
       let intensity = "trace";
       if (precipitation >= 15) {
         intensity = "veryheavy";
@@ -1418,9 +1424,13 @@ function renderHourlyPrecipBars(precipHours) {
       }
 
       const timeLabel = formatHour(hour.time);
-      const title = `${timeLabel}: ${precipitation}mm (${probability}%)`;
+      const roundedAmount = precipitation > 2.5 ? Math.round(precipitation) : (Math.round(precipitation * 10) / 10).toFixed(1);
+      const agreementSuffix = typeof hour.agreement === 'number' && hour.agreement < 1.0
+        ? ` · ${Math.round(hour.agreement * 100)}% agreement`
+        : '';
+      const title = `${timeLabel}: ${roundedAmount}mm (${Math.round(probability)}%)${agreementSuffix}`;
 
-      return `<div class="hourly-precip-bar ${intensity}" style="height: ${heightPercent}%; opacity: ${opacity};" title="${title}"></div>`;
+      return `<div class="hourly-precip-bar ${intensity}" style="height: ${heightPercent.toFixed(1)}%; opacity: ${opacity};" title="${title}"></div>`;
     })
     .join("");
 

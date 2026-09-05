@@ -198,7 +198,7 @@ After completing each phase:
     - [x] Implement model picker dropdown/selector to switch active forecast
     - [x] Update temperature, precipitation text, and graphs according to selected model
 
-- **Phase 5: Weather Model Fusion**
+- **Phase 5: Weather Model Fusion** ✅
 
   - **Phase 5a: Model Fusion Data Processing** ✅
     - [x] Add "Model Fusion" as a selectable option (and default option)
@@ -212,10 +212,11 @@ After completing each phase:
     - [x] Keep graph clean and responsive
     - [x] Verified: SVG rendering dynamically generates closed shaded polygon for multi-model [min, max] temperature spread, preserves clean polyline for single models, and adapts cleanly to light and dark themes
 
-  - **Phase 5c: Rain Forecast Fusion**
-    - [ ] Display blended rain amount and probability in forecast text
-    - [ ] Render rain bars based on model with highest probability
-    - [ ] Visualize model agreement by adjusting bar brightness/opacity (lighter = less agreement)
+  - **Phase 5c: Rain Forecast Fusion** ✅
+    - [x] Display blended rain amount and probability in forecast text
+    - [x] Render rain bars based on model with highest probability
+    - [x] Visualize model agreement by adjusting bar brightness/opacity (lighter = less agreement)
+    - [x] Verified: Rain bars render peak model precipitation height and scale opacity by model agreement score; blended rain amount and probability format cleanly in hourly and daily text
 
 ## Phase 6: Installable Progressive Web App (PWA)
 
