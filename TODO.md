@@ -218,19 +218,21 @@ After completing each phase:
     - [x] Visualize model agreement by adjusting bar brightness/opacity (lighter = less agreement)
     - [x] Verified: Rain bars render peak model precipitation height and scale opacity by model agreement score; blended rain amount and probability format cleanly in hourly and daily text
 
-## Phase 6: Polish and Enhancements
+## Phase 6: Polish and Enhancements ✅
 
-- **Phase 6a: Polish Temperature Graph**
-  - [ ] Implement smooth curve interpolation (e.g., cubic Bezier / Catmull-Rom spline)
-  - [ ] Color the line graph based on temperature (e.g., SVG linear gradient mapping cool to warm hues)
-  - [ ] Color shaded fusion uncertainty area depending on largest min and max diff per timeslot (maybe from green to yellow?)
-  - [ ] Ensure high-contrast legibility in both light and dark modes
+- **Phase 6a: Polish Temperature Graph** ✅
+  - [x] Implement smooth curve interpolation (Fritsch-Carlson monotone cubic spline)
+  - [x] Color the line graph based on temperature (SVG dynamic thermal linear gradient)
+  - [x] Color shaded fusion uncertainty area depending on largest min and max diff per timeslot (greenish for tight agreement, amber/yellow for wide spread)
+  - [x] Ensure high-contrast legibility in both light and dark modes
+  - [x] Verified: Monotone cubic spline curve renders smooth line without local overshoot, closed uncertainty ribbon smoothly traces bounds, dynamic thermal gradient applies color stops, and uncertainty tint scales with ensemble spread
 
-- **Phase 6b: Polish Rain Forecast Fusion**
-  - [ ] Do not use the agreement to set brightness/opacity
-  - [ ] Use probability to set brightness/opacity (as before adding agreement)
-  - [ ] Draw a bar for the highest rain amount using its probability as brightness/opacity 
-  - [ ] Draw a bar for the highest probability using its probability as brightness/opacity 
+- **Phase 6b: Polish Rain Forecast Fusion** ✅
+  - [x] Do not use the agreement to set brightness/opacity
+  - [x] Use probability to set brightness/opacity (pure probability opacity mapping)
+  - [x] Draw a bar for the highest rain amount using its probability as brightness/opacity (subdued when close to most probable)
+  - [x] Draw a bar for the highest probability using its probability as brightness/opacity
+  - [x] Verified: Layered bar slots render most probable base bar and background peak risk bar when difference is notable (>=0.5mm & >=30% increase), auto-subduing negligible differences, with informative tooltips and pure probability opacity 
 
 ## Phase 7: Installable Progressive Web App (PWA)
 

@@ -1011,27 +1011,38 @@ function computeFusedWeatherData(modelWeatherMap) {
       const subPrecips = validModels.map((m) => m.hourly[c]?.precipHours?.[s]?.precipitation).filter((p) => typeof p === "number");
       const subProbs = validModels.map((m) => m.hourly[c]?.precipHours?.[s]?.precipitationProbability).filter((pr) => typeof pr === "number");
 
-      const avgSubPrecip = calculateMean(subPrecips);
-      const avgSubProb = Math.round(calculateMean(subProbs));
       const maxSubProb = subProbs.length > 0 ? Math.max(...subProbs) : 0;
+      const maxSubPrecip = subPrecips.length > 0 ? Math.max(...subPrecips) : 0;
 
-      let peakSubPrecip = avgSubPrecip;
+      // Model with highest probability (most probable forecast)
+      let probAmount = 0;
       if (subProbs.length > 0) {
-        const peakIdx = subProbs.indexOf(maxSubProb);
-        if (peakIdx >= 0 && typeof subPrecips[peakIdx] === "number") {
-          peakSubPrecip = subPrecips[peakIdx];
+        const probIdx = subProbs.indexOf(maxSubProb);
+        if (probIdx >= 0 && typeof subPrecips[probIdx] === "number") {
+          probAmount = subPrecips[probIdx];
         }
       }
 
-      const agreement = calculatePrecipAgreement(subProbs, subPrecips);
+      // Model with highest precipitation amount (peak risk forecast)
+      let peakProb = maxSubProb;
+      if (subPrecips.length > 0) {
+        const amtIdx = subPrecips.indexOf(maxSubPrecip);
+        if (amtIdx >= 0 && typeof subProbs[amtIdx] === "number") {
+          peakProb = subProbs[amtIdx];
+        }
+      }
+
+      // Determine if peak risk is notable (subdued if close to most probable)
+      const amountDiff = maxSubPrecip - probAmount;
+      const hasNotablePeak = amountDiff >= 0.5 && (maxSubPrecip >= 1.3 * probAmount) && maxSubPrecip >= 0.3;
 
       fusedPrecipHours.push({
         time: subTime,
-        precipitation: avgSubPrecip,
-        peakPrecipitation: peakSubPrecip,
-        precipitationProbability: avgSubProb,
-        maxProbability: maxSubProb,
-        agreement,
+        precipitation: probAmount,
+        probability: maxSubProb,
+        peakPrecipitation: maxSubPrecip,
+        peakProbability: peakProb,
+        hasNotablePeak,
       });
     }
 
@@ -1273,7 +1284,138 @@ function renderWeatherEvents(weather) {
 }
 
 /**
- * Generates an SVG polyline string representing the temperature curve across the hourly columns.
+ * Computes a smooth SVG path definition using the Fritsch-Carlson monotone cubic spline algorithm.
+ * Guarantees that the interpolated curve does not overshoot local minima or maxima.
+ * @param {Array<{x: number, y: number}>} points - Array of coordinate points sorted by x
+ * @returns {string} SVG path string
+ */
+function generateMonotoneSplinePath(points) {
+  if (!points || points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  if (points.length === 2) {
+    return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)} L ${points[1].x.toFixed(1)} ${points[1].y.toFixed(1)}`;
+  }
+
+  const n = points.length;
+  const dx = [];
+  const dy = [];
+  const slopes = [];
+
+  for (let i = 0; i < n - 1; i++) {
+    const dX = points[i + 1].x - points[i].x;
+    const dY = points[i + 1].y - points[i].y;
+    dx.push(dX);
+    dy.push(dY);
+    slopes.push(dX === 0 ? 0 : dY / dX);
+  }
+
+  const tangents = [slopes[0]];
+  for (let i = 0; i < n - 2; i++) {
+    const s0 = slopes[i];
+    const s1 = slopes[i + 1];
+    if (s0 * s1 <= 0) {
+      tangents.push(0);
+    } else {
+      const dx0 = dx[i];
+      const dx1 = dx[i + 1];
+      const common = dx0 + dx1;
+      tangents.push((3 * common) / ((common + dx1) / s0 + (common + dx0) / s1));
+    }
+  }
+  tangents.push(slopes[n - 2]);
+
+  let path = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const x0 = points[i].x;
+    const y0 = points[i].y;
+    const x1 = points[i + 1].x;
+    const y1 = points[i + 1].y;
+    const dX = dx[i];
+
+    const cp1x = x0 + dX / 3;
+    const cp1y = y0 + (tangents[i] * dX) / 3;
+    const cp2x = x1 - dX / 3;
+    const cp2y = y1 - (tangents[i + 1] * dX) / 3;
+
+    path += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+  }
+
+  return path;
+}
+
+/**
+ * Computes a smooth closed ribbon path for uncertainty bounds.
+ * @param {Array<{x: number, y: number}>} upperPoints
+ * @param {Array<{x: number, y: number}>} lowerPoints
+ * @returns {string} Closed SVG path string
+ */
+function generateUncertaintyRibbonPath(upperPoints, lowerPoints) {
+  if (!upperPoints || upperPoints.length < 2 || !lowerPoints || lowerPoints.length < 2) {
+    return "";
+  }
+  const upperPath = generateMonotoneSplinePath(upperPoints);
+  const lowerReversed = [...lowerPoints].reverse();
+  const lowerPath = generateMonotoneSplinePath(lowerReversed);
+  const lowerCubicPart = lowerPath.replace(/^M\s+[\d.-]+\s+[\d.-]+/, "");
+  const lastLower = lowerReversed[0];
+
+  return `${upperPath} L ${lastLower.x.toFixed(1)} ${lastLower.y.toFixed(1)} ${lowerCubicPart} Z`;
+}
+
+/**
+ * Returns a thermal color corresponding to a temperature in Celsius.
+ * @param {number} temp - Temperature in Celsius
+ * @returns {string} Hex color string
+ */
+function getTemperatureColor(temp) {
+  if (temp <= -5) return "#38bdf8"; // deep ice blue
+  if (temp <= 0) return "#60a5fa";  // cool blue
+  if (temp <= 7) return "#06b6d4";  // cyan
+  if (temp <= 14) return "#10b981"; // emerald green
+  if (temp <= 21) return "#84cc16"; // lime green
+  if (temp <= 27) return "#f59e0b"; // warm amber
+  if (temp <= 33) return "#f97316"; // orange
+  return "#ef4444";                 // hot coral/red
+}
+
+/**
+ * Generates an SVG linearGradient definition for temperature line graph coloring.
+ * @param {number} minTemp - Minimum temperature in viewport
+ * @param {number} maxTemp - Maximum temperature in viewport
+ * @param {number} tempDelta - Difference between maxTemp and minTemp
+ * @param {string} gradientId - Gradient identifier
+ * @returns {string} SVG <defs> block
+ */
+function generateTemperatureGradient(minTemp, maxTemp, tempDelta, gradientId = "tempGradient") {
+  if (tempDelta <= 0) {
+    const singleColor = getTemperatureColor(minTemp);
+    return `<defs><linearGradient id="${gradientId}" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" stop-color="${singleColor}" /><stop offset="100%" stop-color="${singleColor}" /></linearGradient></defs>`;
+  }
+
+  const keyTemps = [-10, -5, 0, 5, 10, 15, 20, 25, 30, 35];
+  const stops = [
+    { offset: 0, color: getTemperatureColor(minTemp) }
+  ];
+
+  for (const t of keyTemps) {
+    if (t > minTemp && t < maxTemp) {
+      const offset = ((t - minTemp) / tempDelta) * 100;
+      stops.push({ offset, color: getTemperatureColor(t) });
+    }
+  }
+
+  stops.push({ offset: 100, color: getTemperatureColor(maxTemp) });
+  stops.sort((a, b) => a.offset - b.offset);
+
+  const stopsHtml = stops
+    .map((s) => `<stop offset="${s.offset.toFixed(1)}%" stop-color="${s.color}" />`)
+    .join("");
+
+  return `<defs><linearGradient id="${gradientId}" x1="0%" y1="100%" x2="0%" y2="0%">${stopsHtml}</linearGradient></defs>`;
+}
+
+/**
+ * Generates an SVG path string representing the smoothed temperature curve and dynamic uncertainty band.
  * @param {array} graphData - Array of 1-hour temperature data points
  * @param {number} numCols - Number of columns (default: 8)
  * @param {number} colWidth - Width of each column in pixels (default: 58)
@@ -1287,7 +1429,6 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
   }
 
   const totalWidth = numCols * colWidth;
-  // Span the graph from the center of column 0 to the center of column (numCols - 1)
   const maxSpanHours = (numCols - 1) * 3;
   const pointsData = graphData.slice(0, maxSpanHours + 1);
 
@@ -1314,7 +1455,7 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
     if (tempDelta > 0) {
       y = pad + ((maxTemp - d.temperature) / tempDelta) * (graphHeight - 2 * pad);
     }
-    meanPoints.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    meanPoints.push({ x, y });
 
     if (hasUncertainty) {
       const minT = typeof d.minTemp === "number" ? d.minTemp : d.temperature;
@@ -1325,29 +1466,45 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
         yUpper = pad + ((maxTemp - maxT) / tempDelta) * (graphHeight - 2 * pad);
         yLower = pad + ((maxTemp - minT) / tempDelta) * (graphHeight - 2 * pad);
       }
-      upperPoints.push(`${x.toFixed(1)},${yUpper.toFixed(1)}`);
-      lowerPoints.unshift(`${x.toFixed(1)},${yLower.toFixed(1)}`);
+      upperPoints.push({ x, y: yUpper });
+      lowerPoints.push({ x, y: yLower });
     }
   });
 
   let uncertaintySvg = "";
   if (hasUncertainty) {
-    const polygonPoints = [...upperPoints, ...lowerPoints].join(" ");
-    uncertaintySvg = `<polygon class="hourly-graph-uncertainty" points="${polygonPoints}" />`;
+    const maxSpread = pointsData.reduce((max, d) => {
+      const minT = typeof d.minTemp === "number" ? d.minTemp : d.temperature;
+      const maxT = typeof d.maxTemp === "number" ? d.maxTemp : d.temperature;
+      return Math.max(max, maxT - minT);
+    }, 0);
+
+    let uncertaintyClass = "uncertainty-low";
+    if (maxSpread > 3.0) {
+      uncertaintyClass = "uncertainty-high";
+    } else if (maxSpread > 1.5) {
+      uncertaintyClass = "uncertainty-med";
+    }
+
+    const ribbonPath = generateUncertaintyRibbonPath(upperPoints, lowerPoints);
+    uncertaintySvg = `<path class="hourly-graph-uncertainty ${uncertaintyClass}" d="${ribbonPath}" />`;
   }
 
-  const pointsString = meanPoints.join(" ");
+  const linePath = generateMonotoneSplinePath(meanPoints);
+  const defsHtml = generateTemperatureGradient(minTemp, maxTemp, tempDelta);
 
   return `
     <svg class="hourly-graph" viewBox="0 0 ${totalWidth} ${graphHeight}" width="${totalWidth}" height="${graphHeight}" aria-hidden="true">
+      ${defsHtml}
       ${uncertaintySvg}
-      <polyline class="hourly-graph-line" points="${pointsString}" />
+      <path class="hourly-graph-line" d="${linePath}" />
     </svg>
   `.trim();
 }
 
 /**
- * Renders an HTML precipitation bar container with 3 hourly bars for a timeslot.
+ * Renders an HTML precipitation bar container with layered hourly bars for a timeslot.
+ * Displays the most probable forecast as base bar, with an underlaid peak risk bar when notable.
  * @param {array} precipHours - Array of up to 3 1-hour precipitation objects
  * @returns {string} HTML string for the bar container
  */
@@ -1356,87 +1513,96 @@ function renderHourlyPrecipBars(precipHours) {
     return '';
   }
 
-  const numBars = precipHours.reduce((count, hour) => {
-    const precipitation = typeof hour.peakPrecipitation === 'number' ? hour.peakPrecipitation : hour.precipitation;
-    const probability = typeof hour.maxProbability === 'number'
-      ? hour.maxProbability
-      : (hour.precipitationProbability === null ? 0.333 : hour.precipitationProbability);
+  const hasAnyRain = precipHours.some((hour) => {
+    const p = typeof hour.precipitation === "number" ? hour.precipitation : 0;
+    const pr = typeof hour.probability === "number"
+      ? hour.probability
+      : (typeof hour.precipitationProbability === "number" ? hour.precipitationProbability : 0);
+    const peakP = typeof hour.peakPrecipitation === "number" ? hour.peakPrecipitation : p;
+    return (p > 0 && pr > 0) || (hour.hasNotablePeak && peakP > 0);
+  });
 
-    if (
-      typeof precipitation !== "number" ||
-      typeof probability !== "number" ||
-      precipitation <= 0 ||
-      probability <= 0
-    ) {
-      return count;
-    }
-    return count + 1;
-  }, 0);
-
-  if (numBars === 0) {
+  if (!hasAnyRain) {
     return '';
   }
 
   const maxScale = 15.0; // maxScale mm or above reaches 100% height
 
-  const barsHtml = precipHours
+  function getBarHeightPct(amount) {
+    if (typeof amount !== "number" || amount <= 0) return 0;
+    const p = Math.min(Math.max(0.0, amount / maxScale), 1.0);
+    return Math.min(100, Math.max(4, 2 + 75 * Math.log10(1.0 + 20.0 * p)));
+  }
+
+  function getProbOpacity(prob) {
+    if (typeof prob !== "number" || prob <= 0) return 0.20;
+    // Map probability (0-100%) to opacity (0.20 - 0.95)
+    return Math.min(Math.max(0.20, 0.20 + 0.75 * (prob / 100)), 0.95);
+  }
+
+  function getIntensityClass(amount) {
+    if (amount >= 15) return "veryheavy";
+    if (amount >= 7.5) return "heavy";
+    if (amount >= 2.5) return "moderate";
+    if (amount >= 1.0) return "light";
+    if (amount >= 0.25) return "verylight";
+    if (amount >= 0.1) return "drizzle";
+    return "trace";
+  }
+
+  const slotsHtml = precipHours
     .map((hour) => {
-      const precipitation = typeof hour.peakPrecipitation === 'number' ? hour.peakPrecipitation : hour.precipitation;
-      const probability = typeof hour.maxProbability === 'number'
-        ? hour.maxProbability
-        : (hour.precipitationProbability === null ? 0.333 : hour.precipitationProbability);
+      const precipitation = typeof hour.precipitation === "number" ? hour.precipitation : 0;
+      const probability = typeof hour.probability === "number"
+        ? hour.probability
+        : (typeof hour.precipitationProbability === "number" ? hour.precipitationProbability : 0);
+
+      const hasNotablePeak = !!hour.hasNotablePeak;
+      const peakPrecipitation = typeof hour.peakPrecipitation === "number" ? hour.peakPrecipitation : precipitation;
+      const peakProbability = typeof hour.peakProbability === "number" ? hour.peakProbability : probability;
 
       if (
-        typeof precipitation !== "number" ||
-        typeof probability !== "number" ||
-        precipitation <= 0 ||
-        probability <= 0
+        (precipitation <= 0 || probability <= 0) &&
+        (!hasNotablePeak || peakPrecipitation <= 0)
       ) {
-        return '<div class="hourly-precip-bar empty" style="height: 0%;" aria-hidden="true"></div>';
-      }
-
-      // Scale height: 0 to maxScale mm maps to 2% - 100% of container height (28px)
-      const p = Math.min(Math.max(0.0, precipitation / maxScale), 1.0);
-      const heightPercent = Math.min(100, 2 + 75 * Math.log10(1.0 + 20.0 * p));
-
-      // Base Opacity from probability: map probability (25-75) to 0.125 - 0.875
-      const baseOpacity = Math.min(Math.max(0.125, 3.0 * probability / 200 - 0.25), 0.875);
-
-      // Agreement Factor: lower agreement makes bar lighter / more translucent
-      const agreement = typeof hour.agreement === 'number' ? hour.agreement : 1.0;
-      const agreementFactor = Math.min(1.0, Math.max(0.35, agreement));
-      const opacity = (baseOpacity * agreementFactor).toFixed(3);
-
-      // Intensity class based on peak precipitation
-      let intensity = "trace";
-      if (precipitation >= 15) {
-        intensity = "veryheavy";
-      } else if (precipitation >= 7.5) {
-        intensity = "heavy";
-      } else if (precipitation >= 2.5) {
-        intensity = "moderate";
-      } else if (precipitation >= 1.0) {
-        intensity = "light";
-      } else if (precipitation >= 0.25) {
-        intensity = "verylight";
-      } else if (precipitation >= 0.1) {
-        intensity = "drizzle";
+        return '<div class="hourly-bar-slot empty" aria-hidden="true"></div>';
       }
 
       const timeLabel = formatHour(hour.time);
-      const roundedAmount = precipitation > 2.5 ? Math.round(precipitation) : (Math.round(precipitation * 10) / 10).toFixed(1);
-      const agreementSuffix = typeof hour.agreement === 'number' && hour.agreement < 1.0
-        ? ` · ${Math.round(hour.agreement * 100)}% agreement`
-        : '';
-      const title = `${timeLabel}: ${roundedAmount}mm (${Math.round(probability)}%)${agreementSuffix}`;
+      const probAmountStr = precipitation > 2.5 ? Math.round(precipitation) : (Math.round(precipitation * 10) / 10).toFixed(1);
+      const probPctStr = Math.round(probability);
 
-      return `<div class="hourly-precip-bar ${intensity}" style="height: ${heightPercent.toFixed(1)}%; opacity: ${opacity};" title="${title}"></div>`;
+      let title = `${timeLabel}: ${probAmountStr}mm (${probPctStr}%)`;
+      let peakBarHtml = "";
+
+      if (hasNotablePeak && peakPrecipitation > 0) {
+        const peakAmountStr = peakPrecipitation > 2.5 ? Math.round(peakPrecipitation) : (Math.round(peakPrecipitation * 10) / 10).toFixed(1);
+        const peakPctStr = Math.round(peakProbability);
+        title += ` · Peak risk: ${peakAmountStr}mm (${peakPctStr}%)`;
+
+        const peakHeight = getBarHeightPct(peakPrecipitation).toFixed(1);
+        const peakOpacity = getProbOpacity(peakProbability).toFixed(3);
+        const peakIntensity = getIntensityClass(peakPrecipitation);
+        peakBarHtml = `<div class="hourly-precip-bar peak ${peakIntensity}" style="height: ${peakHeight}%; opacity: ${peakOpacity};" aria-hidden="true"></div>`;
+      }
+
+      const baseHeight = getBarHeightPct(precipitation).toFixed(1);
+      const baseOpacity = getProbOpacity(probability).toFixed(3);
+      const baseIntensity = getIntensityClass(precipitation);
+      const baseBarHtml = `<div class="hourly-precip-bar base ${baseIntensity}" style="height: ${baseHeight}%; opacity: ${baseOpacity};" aria-hidden="true"></div>`;
+
+      return `
+        <div class="hourly-bar-slot" title="${title}">
+          ${peakBarHtml}
+          ${baseBarHtml}
+        </div>
+      `.trim();
     })
     .join("");
 
   return `
     <div class="hourly-bar-container">
-      ${barsHtml}
+      ${slotsHtml}
     </div>
   `.trim();
 }
@@ -1462,7 +1628,7 @@ function renderHourlyForecast(hours, hourlyGraph) {
         ? hour.precipHours.reduce((max, h) => Math.max(max, typeof h.precipitation === 'number' ? h.precipitation : 0), 0)
         : hour.precipitation;
       const maxProb = Array.isArray(hour.precipHours)
-        ? hour.precipHours.reduce((max, h) => Math.max(max, typeof h.precipitationProbability === 'number' ? h.precipitationProbability : 0), 0)
+        ? hour.precipHours.reduce((max, h) => Math.max(max, typeof h.probability === 'number' ? h.probability : (typeof h.precipitationProbability === 'number' ? h.precipitationProbability : 0)), 0)
         : hour.precipitationProbability;
       const precipText = formatPrecipitation(maxPrecip, maxProb);
       const currentAttr = hour.isCurrent ? ' data-current="true"' : '';

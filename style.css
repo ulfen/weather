@@ -621,18 +621,41 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
   margin-top: 6px;
 }
 
+.hourly-bar-slot {
+  position: relative;
+  width: 10px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.hourly-bar-slot.empty {
+  visibility: hidden;
+}
+
 .hourly-precip-bar {
-  width: 8px;
   border-radius: 3px 3px 1px 1px;
   transition: height 0.3s ease;
 }
 
-.hourly-precip-bar.empty {
-  visibility: hidden;
+.hourly-precip-bar.base {
+  position: relative;
+  z-index: 2;
+  width: 7px;
+}
+
+.hourly-precip-bar.peak {
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+  width: 11px;
+  border-radius: 4px 4px 1px 1px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
 .hourly-precip-bar.veryheavy {
@@ -681,23 +704,55 @@ body {
 }
 
 .hourly-graph-uncertainty {
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.hourly-graph-uncertainty.uncertainty-low {
+  fill: rgba(16, 185, 129, 0.16);
+  stroke: rgba(16, 185, 129, 0.35);
+  stroke-width: 0.75px;
+  stroke-dasharray: 2, 2;
+}
+
+.hourly-graph-uncertainty.uncertainty-med {
   fill: rgba(59, 130, 246, 0.16);
-  stroke: rgba(59, 130, 246, 0.28);
+  stroke: rgba(59, 130, 246, 0.35);
+  stroke-width: 0.75px;
+  stroke-dasharray: 2, 2;
+}
+
+.hourly-graph-uncertainty.uncertainty-high {
+  fill: rgba(245, 158, 11, 0.22);
+  stroke: rgba(245, 158, 11, 0.45);
   stroke-width: 0.75px;
   stroke-dasharray: 2, 2;
 }
 
 @media (prefers-color-scheme: dark) {
-  .hourly-graph-uncertainty {
-    fill: rgba(96, 165, 250, 0.2);
-    stroke: rgba(96, 165, 250, 0.35);
+  .hourly-precip-bar.peak {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+  }
+
+  .hourly-graph-uncertainty.uncertainty-low {
+    fill: rgba(52, 211, 153, 0.20);
+    stroke: rgba(52, 211, 153, 0.40);
+  }
+
+  .hourly-graph-uncertainty.uncertainty-med {
+    fill: rgba(96, 165, 250, 0.20);
+    stroke: rgba(96, 165, 250, 0.40);
+  }
+
+  .hourly-graph-uncertainty.uncertainty-high {
+    fill: rgba(251, 191, 36, 0.25);
+    stroke: rgba(251, 191, 36, 0.50);
   }
 }
 
 .hourly-graph-line {
   fill: none;
-  stroke: var(--text);
-  stroke-width: 2px;
+  stroke: url(#tempGradient);
+  stroke-width: 2.5px;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
