@@ -621,13 +621,13 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 5px;
+  gap: 1px;
   margin-top: 6px;
 }
 
 .hourly-bar-slot {
   position: relative;
-  width: 10px;
+  width: 16px;
   height: 100%;
   display: flex;
   align-items: flex-end;
@@ -646,16 +646,15 @@ body {
 .hourly-precip-bar.base {
   position: relative;
   z-index: 2;
-  width: 7px;
+  width: 16px;
 }
 
 .hourly-precip-bar.peak {
   position: absolute;
   bottom: 0;
   z-index: 1;
-  width: 11px;
+  width: 5px;
   border-radius: 4px 4px 1px 1px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
 .hourly-precip-bar.veryheavy {
