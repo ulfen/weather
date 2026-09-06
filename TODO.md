@@ -218,21 +218,40 @@ After completing each phase:
     - [x] Visualize model agreement by adjusting bar brightness/opacity (lighter = less agreement)
     - [x] Verified: Rain bars render peak model precipitation height and scale opacity by model agreement score; blended rain amount and probability format cleanly in hourly and daily text
 
-## Phase 6: Polish and Enhancements ✅
+- **Phase 6: Polish and Enhancements** ✅
 
-- **Phase 6a: Polish Temperature Graph** ✅
-  - [x] Implement smooth curve interpolation (Fritsch-Carlson monotone cubic spline)
-  - [x] Color the line graph based on temperature (SVG dynamic thermal linear gradient)
-  - [x] Color shaded fusion uncertainty area depending on largest min and max diff per timeslot (greenish for tight agreement, amber/yellow for wide spread)
-  - [x] Ensure high-contrast legibility in both light and dark modes
-  - [x] Verified: Monotone cubic spline curve renders smooth line without local overshoot, closed uncertainty ribbon smoothly traces bounds, dynamic thermal gradient applies color stops, and uncertainty tint scales with ensemble spread
+  - **Phase 6a: Polish Temperature Graph** ✅
+    - [x] Implement smooth curve interpolation (Fritsch-Carlson monotone cubic spline)
+    - [x] Color the line graph based on temperature (SVG dynamic thermal linear gradient)
+    - [x] Color shaded fusion uncertainty area depending on largest min and max diff per timeslot (greenish for tight agreement, amber/yellow for wide spread)
+    - [x] Ensure high-contrast legibility in both light and dark modes
+    - [x] Verified: Monotone cubic spline curve renders smooth line without local overshoot, closed uncertainty ribbon smoothly traces bounds, dynamic thermal gradient applies color stops, and uncertainty tint scales with ensemble spread
 
-- **Phase 6b: Polish Rain Forecast Fusion** ✅
-  - [x] Do not use the agreement to set brightness/opacity
-  - [x] Use probability to set brightness/opacity (pure probability opacity mapping)
-  - [x] Draw a bar for the highest rain amount using its probability as brightness/opacity (subdued when close to most probable)
-  - [x] Draw a bar for the highest probability using its probability as brightness/opacity
-  - [x] Verified: Layered bar slots render most probable base bar and background peak risk bar when difference is notable (>=0.5mm & >=30% increase), auto-subduing negligible differences, with informative tooltips and pure probability opacity 
+  - **Phase 6b: Polish Rain Forecast Fusion** ✅
+    - [x] Do not use the agreement to set brightness/opacity
+    - [x] Use probability to set brightness/opacity (pure probability opacity mapping)
+    - [x] Draw a bar for the highest rain amount using its probability as brightness/opacity (subdued when close to most probable)
+    - [x] Draw a bar for the highest probability using its probability as brightness/opacity
+    - [x] Verified: Layered bar slots render most probable base bar and background peak risk bar when difference is notable (>=0.5mm & >=30% increase), auto-subduing negligible differences, with informative tooltips and pure probability opacity 
+
+  - **Phase 6c: Shaded uncertainty area**
+    - [ ] Problem: The color of the shaded uncertainty area of the temperature graph does not provide as much information as hoped for
+    - [ ] Give the shaded uncertainty area of the temperature graph a new color for each 3 hour time slot
+    - [ ] Increase the number of uncertainty classes to 5 (add two interpolated colors, to smooth out the color transitions)
+
+  - **Phase 6d: Rain bars**
+    - [ ] Problem: Some models give the exact the same rain probabilities resulting in unnecessary rain bars
+    - [ ] When drawing the bar with highest probability, make it the average of the forecasts similar probability (maybe within 5%?)
+    - [ ] When draing the bar with highest amount, discard any amount that has been used to calculate the average amount for the highest probability
+
+  - **Phase 6e: Notable weather events**
+    - [ ] Problem: When switching models the graphs display at different places dependign on the notable weather events
+    - [ ] Always hide the notable weather events when drawing a new model
+    - [ ] Add a small icon when there are events
+    - [ ] Show the events when the icon is clicked on
+    - [ ] Maybe use the icon of the notable event as icon?
+    - [ ] Maybe make room for up to three notable event icons? (even though clicking any icon reveals all events)
+    - [ ] Maybe make clicking the icon again hides the events?
 
 ## Phase 7: Installable Progressive Web App (PWA)
 
