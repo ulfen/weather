@@ -1008,39 +1008,54 @@ function computeFusedWeatherData(modelWeatherMap) {
 
     for (let s = 0; s < numSubHours; s++) {
       const subTime = primary.hourly[c].precipHours[s].time;
-      const subPrecips = validModels.map((m) => m.hourly[c]?.precipHours?.[s]?.precipitation).filter((p) => typeof p === "number");
-      const subProbs = validModels.map((m) => m.hourly[c]?.precipHours?.[s]?.precipitationProbability).filter((pr) => typeof pr === "number");
+      const validModelsForSlot = validModels.map((m) => {
+        const precip = m.hourly[c]?.precipHours?.[s]?.precipitation;
+        const prob = m.hourly[c]?.precipHours?.[s]?.precipitationProbability;
+        return {
+          precipitation: typeof precip === "number" ? precip : 0,
+          probability: typeof prob === "number" ? prob : 0,
+        };
+      });
 
-      const maxSubProb = subProbs.length > 0 ? Math.max(...subProbs) : 0;
-      const maxSubPrecip = subPrecips.length > 0 ? Math.max(...subPrecips) : 0;
+      const maxSubProb = validModelsForSlot.length > 0
+        ? Math.max(...validModelsForSlot.map((m) => m.probability))
+        : 0;
 
-      // Model with highest probability (most probable forecast)
-      let probAmount = 0;
-      if (subProbs.length > 0) {
-        const probIdx = subProbs.indexOf(maxSubProb);
-        if (probIdx >= 0 && typeof subPrecips[probIdx] === "number") {
-          probAmount = subPrecips[probIdx];
-        }
-      }
+      // Group models within 5% of max probability (cluster near-peak probability)
+      const nearMaxProbModels = validModelsForSlot.filter(
+        (m) => m.probability >= maxSubProb - 5
+      );
+      const probAmount = calculateMean(nearMaxProbModels.map((m) => m.precipitation));
 
-      // Model with highest precipitation amount (peak risk forecast)
+      // Remaining models that were NOT used in calculating the near-max probability amount
+      const remainingModels = validModelsForSlot.filter(
+        (m) => m.probability < maxSubProb - 5
+      );
+
+      let peakAmount = 0;
       let peakProb = maxSubProb;
-      if (subPrecips.length > 0) {
-        const amtIdx = subPrecips.indexOf(maxSubPrecip);
-        if (amtIdx >= 0 && typeof subProbs[amtIdx] === "number") {
-          peakProb = subProbs[amtIdx];
+
+      if (remainingModels.length > 0) {
+        peakAmount = Math.max(...remainingModels.map((m) => m.precipitation));
+        const peakModel = remainingModels.find((m) => m.precipitation === peakAmount);
+        if (peakModel) {
+          peakProb = peakModel.probability;
         }
       }
 
-      // Determine if peak risk is notable (subdued if close to most probable)
-      const amountDiff = maxSubPrecip - probAmount;
-      const hasNotablePeak = amountDiff >= 0.5 && (maxSubPrecip >= 1.3 * probAmount) && maxSubPrecip >= 0.3;
+      // Determine if remaining peak risk is notable (subdued if close to probable amount)
+      const amountDiff = peakAmount - probAmount;
+      const hasNotablePeak =
+        remainingModels.length > 0 &&
+        amountDiff >= 0.5 &&
+        peakAmount >= 1.3 * probAmount &&
+        peakAmount >= 0.3;
 
       fusedPrecipHours.push({
         time: subTime,
         precipitation: probAmount,
         probability: maxSubProb,
-        peakPrecipitation: maxSubPrecip,
+        peakPrecipitation: peakAmount,
         peakProbability: peakProb,
         hasNotablePeak,
       });
@@ -1260,13 +1275,54 @@ function getWeatherEvents(weather) {
   return events;
 }
 
+let WEATHER_EVENTS_EXPANDED = false;
+
 /**
- * Renders notable weather events for the current forecast.
+ * Renders notable weather events as a compact trigger with collapsible drawer.
+ * Defaults to collapsed state on render to avoid layout shifts.
  * @param {object} weather - Parsed weather data
  */
 function renderWeatherEvents(weather) {
   weatherEventsEl.replaceChildren();
-  for (const event of getWeatherEvents(weather)) {
+  const events = getWeatherEvents(weather);
+  if (events.length === 0) {
+    weatherEventsEl.classList.add("hidden");
+    return;
+  }
+
+  weatherEventsEl.classList.remove("hidden");
+
+  // Compact trigger button displaying up to 3 notable event icons
+  const triggerBtn = document.createElement("button");
+  triggerBtn.type = "button";
+  triggerBtn.className = "weather-events-trigger";
+  triggerBtn.setAttribute("aria-expanded", String(WEATHER_EVENTS_EXPANDED));
+  triggerBtn.setAttribute("aria-label", `${events.length} notable weather event${events.length > 1 ? "s" : ""}. Click to toggle details.`);
+
+  const iconsSpan = document.createElement("span");
+  iconsSpan.className = "weather-events-trigger-icons";
+  events.slice(0, 3).forEach((ev) => {
+    const iconBadge = document.createElement("span");
+    iconBadge.className = "weather-events-badge";
+    iconBadge.textContent = ev.icon;
+    iconsSpan.append(iconBadge);
+  });
+
+  const labelSpan = document.createElement("span");
+  labelSpan.className = "weather-events-trigger-label";
+  labelSpan.textContent = `${events.length} alert${events.length > 1 ? "s" : ""}`;
+
+  const chevronSpan = document.createElement("span");
+  chevronSpan.className = "weather-events-trigger-chevron";
+  chevronSpan.textContent = WEATHER_EVENTS_EXPANDED ? "▴" : "▾";
+
+  triggerBtn.append(iconsSpan, labelSpan, chevronSpan);
+
+  // Collapsible details drawer
+  const drawerEl = document.createElement("div");
+  drawerEl.className = `weather-events-drawer${WEATHER_EVENTS_EXPANDED ? " is-open" : " hidden"}`;
+
+  for (const event of events) {
     const row = document.createElement("div");
     row.className = "weather-event";
 
@@ -1279,8 +1335,18 @@ function renderWeatherEvents(weather) {
     text.textContent = event.text;
 
     row.append(icon, text);
-    weatherEventsEl.append(row);
+    drawerEl.append(row);
   }
+
+  triggerBtn.addEventListener("click", () => {
+    WEATHER_EVENTS_EXPANDED = !WEATHER_EVENTS_EXPANDED;
+    triggerBtn.setAttribute("aria-expanded", String(WEATHER_EVENTS_EXPANDED));
+    chevronSpan.textContent = WEATHER_EVENTS_EXPANDED ? "▴" : "▾";
+    drawerEl.classList.toggle("hidden", !WEATHER_EVENTS_EXPANDED);
+    drawerEl.classList.toggle("is-open", WEATHER_EVENTS_EXPANDED);
+  });
+
+  weatherEventsEl.append(triggerBtn, drawerEl);
 }
 
 /**
@@ -1415,6 +1481,79 @@ function generateTemperatureGradient(minTemp, maxTemp, tempDelta, gradientId = "
 }
 
 /**
+ * Returns 5-tier color definitions for a given temperature spread in Celsius.
+ * @param {number} spread - Temperature spread (maxTemp - minTemp)
+ * @returns {{fill: string, stroke: string}}
+ */
+function getUncertaintyColor(spread) {
+  if (spread <= 1.0) {
+    return {
+      fill: "rgba(16, 185, 129, 0.20)",
+      stroke: "rgba(16, 185, 129, 0.40)",
+    };
+  }
+  if (spread <= 2.0) {
+    return {
+      fill: "rgba(6, 182, 212, 0.20)",
+      stroke: "rgba(6, 182, 212, 0.40)",
+    };
+  }
+  if (spread <= 3.0) {
+    return {
+      fill: "rgba(59, 130, 246, 0.20)",
+      stroke: "rgba(59, 130, 246, 0.40)",
+    };
+  }
+  if (spread <= 4.0) {
+    return {
+      fill: "rgba(245, 158, 11, 0.24)",
+      stroke: "rgba(245, 158, 11, 0.45)",
+    };
+  }
+  return {
+    fill: "rgba(239, 68, 68, 0.26)",
+    stroke: "rgba(239, 68, 68, 0.50)",
+  };
+}
+
+/**
+ * Generates horizontal linearGradient definitions for 5-tier dynamic uncertainty ribbon coloring.
+ * @param {Array<object>} pointsData
+ * @param {number} totalWidth
+ * @param {number} startX
+ * @param {number} hourStepX
+ * @returns {string} SVG <linearGradient> defs
+ */
+function generateUncertaintyGradients(pointsData, totalWidth, startX, hourStepX) {
+  if (!pointsData || pointsData.length === 0 || totalWidth <= 0) return "";
+
+  const fillStops = [];
+  const strokeStops = [];
+
+  pointsData.forEach((d, index) => {
+    const minT = typeof d.minTemp === "number" ? d.minTemp : d.temperature;
+    const maxT = typeof d.maxTemp === "number" ? d.maxTemp : d.temperature;
+    const spread = Math.max(0, maxT - minT);
+    const colors = getUncertaintyColor(spread);
+
+    const x = startX + index * hourStepX;
+    const offsetPct = Math.min(100, Math.max(0, (x / totalWidth) * 100));
+
+    fillStops.push(`<stop offset="${offsetPct.toFixed(1)}%" stop-color="${colors.fill}" />`);
+    strokeStops.push(`<stop offset="${offsetPct.toFixed(1)}%" stop-color="${colors.stroke}" />`);
+  });
+
+  return `
+    <linearGradient id="uncertaintyFillGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      ${fillStops.join("")}
+    </linearGradient>
+    <linearGradient id="uncertaintyStrokeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      ${strokeStops.join("")}
+    </linearGradient>
+  `;
+}
+
+/**
  * Generates an SVG path string representing the smoothed temperature curve and dynamic uncertainty band.
  * @param {array} graphData - Array of 1-hour temperature data points
  * @param {number} numCols - Number of columns (default: 8)
@@ -1472,22 +1611,11 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
   });
 
   let uncertaintySvg = "";
+  let uncertaintyDefs = "";
   if (hasUncertainty) {
-    const maxSpread = pointsData.reduce((max, d) => {
-      const minT = typeof d.minTemp === "number" ? d.minTemp : d.temperature;
-      const maxT = typeof d.maxTemp === "number" ? d.maxTemp : d.temperature;
-      return Math.max(max, maxT - minT);
-    }, 0);
-
-    let uncertaintyClass = "uncertainty-low";
-    if (maxSpread > 3.0) {
-      uncertaintyClass = "uncertainty-high";
-    } else if (maxSpread > 1.5) {
-      uncertaintyClass = "uncertainty-med";
-    }
-
+    uncertaintyDefs = generateUncertaintyGradients(pointsData, totalWidth, startX, hourStepX);
     const ribbonPath = generateUncertaintyRibbonPath(upperPoints, lowerPoints);
-    uncertaintySvg = `<path class="hourly-graph-uncertainty ${uncertaintyClass}" d="${ribbonPath}" />`;
+    uncertaintySvg = `<path class="hourly-graph-uncertainty" d="${ribbonPath}" fill="url(#uncertaintyFillGradient)" stroke="url(#uncertaintyStrokeGradient)" />`;
   }
 
   const linePath = generateMonotoneSplinePath(meanPoints);
@@ -1495,7 +1623,10 @@ function generateHourlySvg(graphData, numCols = 8, colWidth = 58, graphHeight = 
 
   return `
     <svg class="hourly-graph" viewBox="0 0 ${totalWidth} ${graphHeight}" width="${totalWidth}" height="${graphHeight}" aria-hidden="true">
-      ${defsHtml}
+      <defs>
+        ${defsHtml.replace("<defs>", "").replace("</defs>", "")}
+        ${uncertaintyDefs}
+      </defs>
       ${uncertaintySvg}
       <path class="hourly-graph-line" d="${linePath}" />
     </svg>
@@ -1819,6 +1950,7 @@ async function fetchWeatherModels(location = WEATHER_LOCATION) {
 }
 
 function selectModel(modelId) {
+  WEATHER_EVENTS_EXPANDED = false;
   const nextModel = setActiveModel(modelId);
   closeModelMenu();
 

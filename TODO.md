@@ -234,24 +234,27 @@ After completing each phase:
     - [x] Draw a bar for the highest probability using its probability as brightness/opacity
     - [x] Verified: Layered bar slots render most probable base bar and background peak risk bar when difference is notable (>=0.5mm & >=30% increase), auto-subduing negligible differences, with informative tooltips and pure probability opacity 
 
-  - **Phase 6c: Shaded uncertainty area**
-    - [ ] Problem: The color of the shaded uncertainty area of the temperature graph does not provide as much information as hoped for
-    - [ ] Give the shaded uncertainty area of the temperature graph a new color for each 3 hour time slot
-    - [ ] Increase the number of uncertainty classes to 5 (add two interpolated colors, to smooth out the color transitions)
+  - **Phase 6c: Shaded uncertainty area** ✅
+    - [x] Problem: The color of the shaded uncertainty area of the temperature graph does not provide as much information as hoped for
+    - [x] Give the shaded uncertainty area of the temperature graph a new color for each 3 hour time slot
+    - [x] Increase the number of uncertainty classes to 5 (add two interpolated colors, to smooth out the color transitions)
+    - [x] Verified: Horizontal SVG linear gradient generates 5 distinct spread-based color stops (Emerald -> Cyan -> Blue -> Amber -> Coral) across all hourly graph points
 
-  - **Phase 6d: Rain bars**
-    - [ ] Problem: Some models give the exact the same rain probabilities resulting in unnecessary rain bars
-    - [ ] When drawing the bar with highest probability, make it the average of the forecasts similar probability (maybe within 5%?)
-    - [ ] When draing the bar with highest amount, discard any amount that has been used to calculate the average amount for the highest probability
+  - **Phase 6d: Rain bars** ✅
+    - [x] Problem: Some models give the exact the same rain probabilities resulting in unnecessary rain bars
+    - [x] When drawing the bar with highest probability, make it the average of the forecasts similar probability (maybe within 5%?)
+    - [x] When drawing the bar with highest amount, discard any amount that has been used to calculate the average amount for the highest probability
+    - [x] Verified: Models within 5% of peak probability are clustered and averaged into the base bar; discarded from peak amount search, eliminating spurious dual bars
 
-  - **Phase 6e: Notable weather events**
-    - [ ] Problem: When switching models the graphs display at different places dependign on the notable weather events
-    - [ ] Always hide the notable weather events when drawing a new model
-    - [ ] Add a small icon when there are events
-    - [ ] Show the events when the icon is clicked on
-    - [ ] Maybe use the icon of the notable event as icon?
-    - [ ] Maybe make room for up to three notable event icons? (even though clicking any icon reveals all events)
-    - [ ] Maybe make clicking the icon again hides the events?
+  - **Phase 6e: Notable weather events** ✅
+    - [x] Problem: When switching models the graphs display at different places depending on the notable weather events
+    - [x] Always hide the notable weather events when drawing a new model
+    - [x] Add a small icon when there are events
+    - [x] Show the events when the icon is clicked on
+    - [x] Maybe use the icon of the notable event as icon?
+    - [x] Maybe make room for up to three notable event icons? (even though clicking any icon reveals all events)
+    - [x] Maybe make clicking the icon again hides the events?
+    - [x] Verified: Collapsible trigger badge displays up to 3 event icons with alert counter, clicking toggles details drawer open/closed, and state defaults to collapsed on model switches preventing graph layout jumping
 
 ## Phase 7: Installable Progressive Web App (PWA)
 
