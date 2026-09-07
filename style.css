@@ -60,13 +60,12 @@ body {
 .weather-header {
   margin-bottom: 18px;
   position: relative;
+  z-index: 40;
 }
 
 .header-main {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
   min-height: 36px;
 }
 
@@ -95,9 +94,8 @@ body {
   padding: 0;
   font-family: inherit;
   cursor: pointer;
-  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
-  max-width: calc(100% - 180px);
   text-align: left;
 }
 
@@ -124,10 +122,13 @@ body {
 }
 
 .model-picker {
-  position: relative;
+  position: absolute;
+  top: 0;
+  right: 0;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  z-index: 35;
 }
 
 .model-picker-btn {
@@ -273,7 +274,7 @@ body {
   box-shadow: 0 10px 25px var(--shadow);
   padding: 8px 0;
   text-align: left;
-  max-height: 240px;
+  max-height: 360px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
@@ -325,6 +326,51 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.location-menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+
+.location-menu-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.location-menu-action:hover {
+  background: var(--panel);
+}
+
+.location-menu-action-icon {
+  width: 1.1rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.favorite-toggle-btn.is-favorite .location-menu-action-icon {
+  color: #f59e0b;
+}
+
+.location-menu-action-label {
+  flex: 1;
 }
 
 .favorites-header {
@@ -446,6 +492,9 @@ body {
   gap: 6px;
   width: 100%;
   flex-wrap: wrap;
+  padding: 2px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
 }
 
 .location-search.hidden {
@@ -510,11 +559,14 @@ body {
 }
 
 .current-weather {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  padding-top: 4px;
 }
 
 .weather-icon {
@@ -536,8 +588,11 @@ body {
 }
 
 .weather-events {
-  margin-top: 14px;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
   width: 100%;
+  z-index: 30;
 }
 
 .weather-events.hidden,
@@ -602,6 +657,7 @@ body {
   background: var(--panel);
   overflow: hidden;
   text-align: left;
+  box-shadow: 0 8px 18px var(--shadow);
 }
 
 .weather-events-drawer.hidden {

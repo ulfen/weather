@@ -20,7 +20,6 @@ let LAST_GPS_LOCATION = null;
 
 const locationEl = document.getElementById("location");
 const locationBtnEl = document.getElementById("location-btn");
-const headerMainEl = document.getElementById("header-main");
 const locationFormEl = document.getElementById("location-form");
 const favoriteToggleBtnEl = document.getElementById("favorite-toggle");
 const favoritesMenuEl = document.getElementById("favorites-menu");
@@ -545,7 +544,16 @@ function toggleFavorite() {
 function updateFavoriteButton() {
   if (!favoriteToggleBtnEl) return;
   const isFav = isFavorite(WEATHER_LOCATION);
-  favoriteToggleBtnEl.textContent = isFav ? "★" : "☆";
+  const favoriteIconEl = favoriteToggleBtnEl.querySelector(".location-menu-action-icon");
+  if (favoriteIconEl) {
+    favoriteIconEl.textContent = isFav ? "★" : "☆";
+  } else {
+    favoriteToggleBtnEl.textContent = isFav ? "★" : "☆";
+  }
+  const favoriteLabelEl = favoriteToggleBtnEl.querySelector(".location-menu-action-label");
+  if (favoriteLabelEl) {
+    favoriteLabelEl.textContent = isFav ? "Remove from favorites" : "Add to favorites";
+  }
   favoriteToggleBtnEl.setAttribute("aria-pressed", isFav ? "true" : "false");
   favoriteToggleBtnEl.setAttribute("aria-label", isFav ? "Remove from favorites" : "Add to favorites");
   favoriteToggleBtnEl.classList.toggle("is-favorite", isFav);
@@ -556,9 +564,6 @@ function updateFavoriteButton() {
  */
 function openFavoritesMenu() {
   if (favoritesMenuEl && locationBtnEl) {
-    if (locationFormEl && !locationFormEl.classList.contains("hidden")) {
-      closeSearch();
-    }
     renderFavoritesMenu();
     favoritesMenuEl.classList.remove("hidden");
     locationBtnEl.setAttribute("aria-expanded", "true");
@@ -570,6 +575,7 @@ function openFavoritesMenu() {
  */
 function closeFavoritesMenu() {
   if (favoritesMenuEl && locationBtnEl) {
+    closeSearch();
     favoritesMenuEl.classList.add("hidden");
     locationBtnEl.setAttribute("aria-expanded", "false");
   }
@@ -656,9 +662,10 @@ function renderFavoritesMenu() {
  * Opens the collapsible search form and focuses the input.
  */
 function openSearch() {
-  if (headerMainEl && locationFormEl) {
-    closeFavoritesMenu();
-    headerMainEl.classList.add("hidden");
+  if (locationFormEl) {
+    if (favoritesMenuEl?.classList.contains("hidden")) {
+      openFavoritesMenu();
+    }
     locationFormEl.classList.remove("hidden");
     searchToggleBtnEl?.setAttribute("aria-expanded", "true");
     clearSearchError();
@@ -667,12 +674,11 @@ function openSearch() {
 }
 
 /**
- * Closes the search form, clears errors, and restores the main header.
+ * Closes the search form and clears errors.
  */
 function closeSearch() {
-  if (headerMainEl && locationFormEl) {
+  if (locationFormEl) {
     locationFormEl.classList.add("hidden");
-    headerMainEl.classList.remove("hidden");
     searchToggleBtnEl?.setAttribute("aria-expanded", "false");
     clearSearchError();
   }
@@ -701,6 +707,7 @@ async function searchLocation() {
     };
     locationInputEl.value = "";
     closeSearch();
+    closeFavoritesMenu();
     await fetchWeather();
   } catch (error) {
     console.error("Location search failed:", error);
@@ -1304,6 +1311,21 @@ function getWeatherEvents(weather) {
 
 let WEATHER_EVENTS_EXPANDED = false;
 
+function closeWeatherEvents() {
+  WEATHER_EVENTS_EXPANDED = false;
+  const drawerEl = weatherEventsEl?.querySelector(".weather-events-drawer");
+  const triggerBtn = weatherEventsEl?.querySelector(".weather-events-trigger");
+  if (drawerEl) {
+    drawerEl.classList.add("hidden");
+    drawerEl.classList.remove("is-open");
+  }
+  if (triggerBtn) {
+    triggerBtn.setAttribute("aria-expanded", "false");
+    const chevron = triggerBtn.querySelector(".weather-events-trigger-chevron");
+    if (chevron) chevron.textContent = "▾";
+  }
+}
+
 /**
  * Renders notable weather events as a compact trigger with collapsible drawer.
  * Defaults to collapsed state on render to avoid layout shifts.
@@ -1366,6 +1388,9 @@ function renderWeatherEvents(weather) {
   }
 
   triggerBtn.addEventListener("click", () => {
+    if (!WEATHER_EVENTS_EXPANDED) {
+      closeModelMenu();
+    }
     WEATHER_EVENTS_EXPANDED = !WEATHER_EVENTS_EXPANDED;
     triggerBtn.setAttribute("aria-expanded", String(WEATHER_EVENTS_EXPANDED));
     chevronSpan.textContent = WEATHER_EVENTS_EXPANDED ? "▴" : "▾";
@@ -1889,6 +1914,9 @@ function setActiveModel(modelId) {
 function toggleModelMenu() {
   if (!modelPickerMenuEl || !modelPickerBtnEl) return;
   const isHidden = modelPickerMenuEl.classList.contains("hidden");
+  if (isHidden) {
+    closeWeatherEvents();
+  }
   modelPickerMenuEl.classList.toggle("hidden", !isHidden);
   modelPickerBtnEl.setAttribute("aria-expanded", String(isHidden));
 }
@@ -1989,7 +2017,7 @@ async function fetchWeatherModels(location = WEATHER_LOCATION) {
 }
 
 function selectModel(modelId) {
-  WEATHER_EVENTS_EXPANDED = false;
+  closeWeatherEvents();
   const nextModel = setActiveModel(modelId);
   closeModelMenu();
 
@@ -2082,6 +2110,13 @@ document.addEventListener("click", (event) => {
   }
 });
 
+document.addEventListener("click", (event) => {
+  if (!weatherEventsEl || !WEATHER_EVENTS_EXPANDED) return;
+  if (!weatherEventsEl.contains(event.target)) {
+    closeWeatherEvents();
+  }
+});
+
 searchToggleBtnEl?.addEventListener("click", () => {
   openSearch();
 });
@@ -2113,6 +2148,8 @@ document.addEventListener("click", (event) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    closeModelMenu();
+    closeWeatherEvents();
     if (locationFormEl && !locationFormEl.classList.contains("hidden")) {
       closeSearch();
     }

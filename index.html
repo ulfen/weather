@@ -16,25 +16,6 @@
           <span class="location" id="location"></span>
           <span class="location-chevron" aria-hidden="true">▾</span>
         </button>
-        <div class="header-actions">
-          <div class="model-picker" aria-label="Weather model selector">
-            <button type="button" class="model-picker-btn" id="model-picker-btn" aria-label="Select weather model" aria-expanded="false">
-              <span class="model-picker-label">Model</span>
-              <span class="model-picker-value" id="model-picker-value">Model Fusion</span>
-              <span class="model-picker-chevron" aria-hidden="true">▾</span>
-            </button>
-            <div class="model-picker-menu hidden" id="model-picker-menu" role="menu" aria-label="Weather model options">
-              <button type="button" class="model-option is-active" data-model="fusion" role="menuitemradio" aria-checked="true">Model Fusion</button>
-              <button type="button" class="model-option" data-model="knmi_seamless" role="menuitemradio" aria-checked="false">KNMI</button>
-              <button type="button" class="model-option" data-model="dwd_icon_seamless" role="menuitemradio" aria-checked="false">DWD</button>
-              <button type="button" class="model-option" data-model="meteofrance_seamless" role="menuitemradio" aria-checked="false">Météo France</button>
-              <button type="button" class="model-option" data-model="ukmo_seamless" role="menuitemradio" aria-checked="false">UKMO</button>
-              <button type="button" class="model-option" data-model="ncep_gfs_seamless" role="menuitemradio" aria-checked="false">NCEP</button>
-            </div>
-          </div>
-          <button type="button" class="icon-btn favorite-toggle-btn" id="favorite-toggle" aria-label="Add to favorites" aria-pressed="false">☆</button>
-          <button type="button" class="icon-btn search-toggle-btn" id="search-toggle" aria-label="Search location" aria-expanded="false">🔍</button>
-        </div>
       </div>
 
       <div class="favorites-menu hidden" id="favorites-menu" role="menu" aria-label="Favorite locations">
@@ -44,27 +25,50 @@
             <span class="current-location-label" id="current-location-label">Current Location</span>
           </button>
         </div>
+        <div class="location-menu-actions" aria-label="Location actions">
+          <button type="button" class="location-menu-action favorite-toggle-btn" id="favorite-toggle" aria-label="Add to favorites" aria-pressed="false">
+            <span class="location-menu-action-icon" aria-hidden="true">☆</span>
+            <span class="location-menu-action-label">Add to favorites</span>
+          </button>
+          <button type="button" class="location-menu-action search-toggle-btn" id="search-toggle" aria-label="Search location" aria-expanded="false">
+            <span aria-hidden="true">🔍</span>
+            <span class="location-menu-action-label">Search location</span>
+          </button>
+        </div>
+        <form class="location-search hidden" id="location-form" role="search">
+          <input type="text" id="location-input" placeholder="Search city or location..." autocomplete="off" />
+          <button type="submit" class="search-submit-btn" id="search-button" aria-label="Submit search">🔍</button>
+          <button type="button" class="search-close-btn" id="search-close" aria-label="Close search">✕</button>
+          <div class="search-error" id="search-error"></div>
+        </form>
         <div class="favorites-header">
           <span class="favorites-title">Saved Locations</span>
         </div>
         <div class="favorites-list" id="favorites-list"></div>
       </div>
-
-      <form class="location-search hidden" id="location-form" role="search">
-        <input type="text" id="location-input" placeholder="Search city or location..." autocomplete="off" />
-        <button type="submit" class="search-submit-btn" id="search-button" aria-label="Submit search">🔍</button>
-        <button type="button" class="search-close-btn" id="search-close" aria-label="Close search">✕</button>
-        <div class="search-error" id="search-error"></div>
-      </form>
     </header>
 
     <div class="current-weather" aria-live="polite">
+      <div class="model-picker" aria-label="Weather model selector">
+        <button type="button" class="model-picker-btn" id="model-picker-btn" aria-label="Select weather model" aria-expanded="false">
+          <span class="model-picker-label">Model</span>
+          <span class="model-picker-value" id="model-picker-value">Model Fusion</span>
+          <span class="model-picker-chevron" aria-hidden="true">▾</span>
+        </button>
+        <div class="model-picker-menu hidden" id="model-picker-menu" role="menu" aria-label="Weather model options">
+          <button type="button" class="model-option is-active" data-model="fusion" role="menuitemradio" aria-checked="true">Model Fusion</button>
+          <button type="button" class="model-option" data-model="knmi_seamless" role="menuitemradio" aria-checked="false">KNMI</button>
+          <button type="button" class="model-option" data-model="dwd_icon_seamless" role="menuitemradio" aria-checked="false">DWD</button>
+          <button type="button" class="model-option" data-model="meteofrance_seamless" role="menuitemradio" aria-checked="false">Météo France</button>
+          <button type="button" class="model-option" data-model="ukmo_seamless" role="menuitemradio" aria-checked="false">UKMO</button>
+          <button type="button" class="model-option" data-model="ncep_gfs_seamless" role="menuitemradio" aria-checked="false">NCEP</button>
+        </div>
+      </div>
       <div class="weather-icon" id="weather-icon" aria-label="Sunny weather">☀️</div>
       <p class="temperature" id="temperature"></p>
       <p class="condition" id="condition"></p>
+      <div class="weather-events" id="weather-events" aria-label="Notable weather events"></div>
     </div>
-
-    <div class="weather-events" id="weather-events" aria-label="Notable weather events"></div>
 
     <div class="hourly-forecast" aria-label="Hourly forecast">
       <div class="hourly-row" id="hourly-row"></div>
