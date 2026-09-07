@@ -26,8 +26,6 @@ const favoritesMenuEl = document.getElementById("favorites-menu");
 const favoritesListEl = document.getElementById("favorites-list");
 const currentLocationBtnEl = document.getElementById("current-location-btn");
 const currentLocationLabelEl = document.getElementById("current-location-label");
-const searchToggleBtnEl = document.getElementById("search-toggle");
-const searchCloseBtnEl = document.getElementById("search-close");
 const temperatureEl = document.getElementById("temperature");
 const conditionEl = document.getElementById("condition");
 const weatherEventsEl = document.getElementById("weather-events");
@@ -659,29 +657,9 @@ function renderFavoritesMenu() {
 }
 
 /**
- * Opens the collapsible search form and focuses the input.
- */
-function openSearch() {
-  if (locationFormEl) {
-    if (favoritesMenuEl?.classList.contains("hidden")) {
-      openFavoritesMenu();
-    }
-    locationFormEl.classList.remove("hidden");
-    searchToggleBtnEl?.setAttribute("aria-expanded", "true");
-    clearSearchError();
-    locationInputEl?.focus();
-  }
-}
-
-/**
- * Closes the search form and clears errors.
  */
 function closeSearch() {
-  if (locationFormEl) {
-    locationFormEl.classList.add("hidden");
-    searchToggleBtnEl?.setAttribute("aria-expanded", "false");
-    clearSearchError();
-  }
+  clearSearchError();
 }
 
 /**
@@ -2117,14 +2095,6 @@ document.addEventListener("click", (event) => {
   }
 });
 
-searchToggleBtnEl?.addEventListener("click", () => {
-  openSearch();
-});
-
-searchCloseBtnEl?.addEventListener("click", () => {
-  closeSearch();
-});
-
 favoriteToggleBtnEl?.addEventListener("click", () => {
   toggleFavorite();
 });
@@ -2150,9 +2120,6 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeModelMenu();
     closeWeatherEvents();
-    if (locationFormEl && !locationFormEl.classList.contains("hidden")) {
-      closeSearch();
-    }
     if (favoritesMenuEl && !favoritesMenuEl.classList.contains("hidden")) {
       closeFavoritesMenu();
     }

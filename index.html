@@ -30,15 +30,11 @@
             <span class="location-menu-action-icon" aria-hidden="true">☆</span>
             <span class="location-menu-action-label">Add to favorites</span>
           </button>
-          <button type="button" class="location-menu-action search-toggle-btn" id="search-toggle" aria-label="Search location" aria-expanded="false">
-            <span aria-hidden="true">🔍</span>
-            <span class="location-menu-action-label">Search location</span>
-          </button>
         </div>
-        <form class="location-search hidden" id="location-form" role="search">
+        <form class="location-search" id="location-form" role="search">
+          <label class="visually-hidden" for="location-input">Search city or location</label>
           <input type="text" id="location-input" placeholder="Search city or location..." autocomplete="off" />
           <button type="submit" class="search-submit-btn" id="search-button" aria-label="Submit search">🔍</button>
-          <button type="button" class="search-close-btn" id="search-close" aria-label="Close search">✕</button>
           <div class="search-error" id="search-error"></div>
         </form>
         <div class="favorites-header">

@@ -497,8 +497,16 @@ body {
   margin-bottom: 6px;
 }
 
-.location-search.hidden {
-  display: none;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 #location-input {
@@ -518,8 +526,7 @@ body {
   border-color: var(--muted);
 }
 
-.search-submit-btn,
-.search-close-btn {
+.search-submit-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -535,13 +542,11 @@ body {
   flex-shrink: 0;
 }
 
-.search-submit-btn:hover,
-.search-close-btn:hover {
+.search-submit-btn:hover {
   background: var(--border);
 }
 
-.search-submit-btn:active,
-.search-close-btn:active {
+.search-submit-btn:active {
   opacity: 0.8;
 }
 
