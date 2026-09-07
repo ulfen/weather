@@ -172,6 +172,15 @@ function formatHour(timeStr) {
 }
 
 /**
+ * Rounds a numeric value while preserving missing or invalid values.
+ * @param {number} value
+ * @returns {number|null}
+ */
+function roundFinite(value) {
+  return Number.isFinite(value) ? Math.round(value) : null;
+}
+
+/**
  * Formats precipitation amount and probability into "x mm (y%)" string if both are above 0.
  * @param {number} precipitation - Precipitation amount in mm
  * @param {number} probability - Precipitation probability percentage (0-100)
@@ -838,8 +847,8 @@ function parseWeatherData(data) {
   const forecast = data.daily.time.slice(0, maxDailyDays).map((date, index) => ({
     date,
     code: data.daily.weather_code[index],
-    max: Math.round(data.daily.temperature_2m_max[index]),
-    min: Math.round(data.daily.temperature_2m_min[index]),
+    max: roundFinite(data.daily.temperature_2m_max[index]),
+    min: roundFinite(data.daily.temperature_2m_min[index]),
     precipitation: data.daily.precipitation_sum[index],
     precipitationHours: data.daily.precipitation_hours[index],
     precipitationProbability: data.daily.precipitation_probability_max[index],
@@ -849,9 +858,11 @@ function parseWeatherData(data) {
 
   const todayRange = data.daily.time.length > todayIndex && todayIndex >= 0
     ? {
-      max: Math.round(data.daily.temperature_2m_max[todayIndex]),
-      min: Math.round(data.daily.temperature_2m_min[todayIndex]),
-      difference: Math.round(data.daily.temperature_2m_max[todayIndex] - data.daily.temperature_2m_min[todayIndex]),
+      max: roundFinite(data.daily.temperature_2m_max[todayIndex]),
+      min: roundFinite(data.daily.temperature_2m_min[todayIndex]),
+      difference: Number.isFinite(data.daily.temperature_2m_max[todayIndex]) && Number.isFinite(data.daily.temperature_2m_min[todayIndex])
+        ? Math.round(data.daily.temperature_2m_max[todayIndex] - data.daily.temperature_2m_min[todayIndex])
+        : null,
       precipitation: data.daily.precipitation_sum[todayIndex],
       precipitationHours: data.daily.precipitation_hours[todayIndex],
       precipitationProbability: data.daily.precipitation_probability_max[todayIndex],
@@ -896,9 +907,11 @@ function parseWeatherData(data) {
  * @returns {number}
  */
 function calculateMean(values) {
-  if (!Array.isArray(values) || values.length === 0) return 0;
-  const sum = values.reduce((acc, val) => acc + (typeof val === "number" ? val : 0), 0);
-  return sum / values.length;
+  if (!Array.isArray(values)) return 0;
+  const finiteValues = values.filter((value) => Number.isFinite(value));
+  if (finiteValues.length === 0) return 0;
+  const sum = finiteValues.reduce((acc, value) => acc + value, 0);
+  return sum / finiteValues.length;
 }
 
 /**
@@ -1105,12 +1118,12 @@ function computeFusedWeatherData(modelWeatherMap) {
     const isYesterday = primary.forecast[d].isYesterday;
     const isToday = primary.forecast[d].isToday;
 
-    const dayCodes = validModels.map((m) => m.forecast[d]?.code).filter((cd) => typeof cd === "number");
-    const dayMaxes = validModels.map((m) => m.forecast[d]?.max).filter((t) => typeof t === "number");
-    const dayMins = validModels.map((m) => m.forecast[d]?.min).filter((t) => typeof t === "number");
-    const dayPrecips = validModels.map((m) => m.forecast[d]?.precipitation).filter((p) => typeof p === "number");
-    const dayPrecipHours = validModels.map((m) => m.forecast[d]?.precipitationHours).filter((h) => typeof h === "number");
-    const dayProbs = validModels.map((m) => m.forecast[d]?.precipitationProbability).filter((pr) => typeof pr === "number");
+    const dayCodes = validModels.map((m) => m.forecast[d]?.code).filter((code) => Number.isFinite(code));
+    const dayMaxes = validModels.map((m) => m.forecast[d]?.max).filter((temperature) => Number.isFinite(temperature));
+    const dayMins = validModels.map((m) => m.forecast[d]?.min).filter((temperature) => Number.isFinite(temperature));
+    const dayPrecips = validModels.map((m) => m.forecast[d]?.precipitation).filter((precipitation) => Number.isFinite(precipitation));
+    const dayPrecipHours = validModels.map((m) => m.forecast[d]?.precipitationHours).filter((hours) => Number.isFinite(hours));
+    const dayProbs = validModels.map((m) => m.forecast[d]?.precipitationProbability).filter((probability) => Number.isFinite(probability));
 
     const avgMax = Math.round(calculateMean(dayMaxes));
     const avgMin = Math.round(calculateMean(dayMins));
