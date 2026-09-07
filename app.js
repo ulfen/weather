@@ -1549,8 +1549,10 @@ function generateUncertaintyGradients(pointsData, totalWidth, startX, hourStepX)
     const spread = Math.max(0, maxT - minT);
     const colors = getUncertaintyColor(spread);
 
-    const x = startX + index * hourStepX;
-    const offsetPct = Math.min(100, Math.max(0, (x / totalWidth) * 100));
+    const pointRatio = pointsData.length === 1
+      ? 0
+      : index / (pointsData.length - 1);
+    const offsetPct = pointRatio * 100;
 
     fillStops.push(`<stop offset="${offsetPct.toFixed(1)}%" stop-color="${colors.fill}" />`);
     strokeStops.push(`<stop offset="${offsetPct.toFixed(1)}%" stop-color="${colors.stroke}" />`);
