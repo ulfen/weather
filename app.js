@@ -391,6 +391,7 @@ async function fetchGpsLocation() {
  */
 async function selectGpsLocation() {
   closeFavoritesMenu();
+  setModelLoading(true);
   if (currentLocationLabelEl) {
     currentLocationLabelEl.textContent = "Detecting location...";
   }
@@ -402,13 +403,15 @@ async function selectGpsLocation() {
       currentLocationLabelEl.textContent = "Current Location";
     }
     updateFavoriteButton();
-    fetchWeather();
+    await fetchWeather();
   } catch (error) {
     console.error("GPS location detection failed:", error);
     if (currentLocationLabelEl) {
       currentLocationLabelEl.textContent = "Current Location";
     }
     showSearchError("Could not access physical GPS location.");
+  } finally {
+    setModelLoading(false);
   }
 }
 
@@ -416,6 +419,7 @@ async function selectGpsLocation() {
  * Initializes the application location on startup (attempts GPS, falls back to default).
  */
 async function initAppLocation() {
+  setModelLoading(true);
   try {
     const gpsLoc = await fetchGpsLocation();
     WEATHER_LOCATION = gpsLoc;
@@ -423,8 +427,12 @@ async function initAppLocation() {
     console.warn("Initial GPS detection failed or was denied; using default location:", error);
     WEATHER_LOCATION = { ...DEFAULT_LOCATION };
   }
-  updateFavoriteButton();
-  fetchWeather();
+  try {
+    updateFavoriteButton();
+    await fetchWeather();
+  } finally {
+    setModelLoading(false);
+  }
 }
 
 /**
@@ -592,7 +600,10 @@ function selectFavoriteLocation(fav) {
   };
   closeFavoritesMenu();
   updateFavoriteButton();
-  fetchWeather();
+  setModelLoading(true);
+  fetchWeather().finally(() => {
+    setModelLoading(false);
+  });
 }
 
 /**
@@ -675,6 +686,7 @@ async function searchLocation() {
   if (!query) return;
 
   clearSearchError();
+  setModelLoading(true);
   try {
     const location = await fetchCoordinates(query);
 
@@ -689,10 +701,12 @@ async function searchLocation() {
     };
     locationInputEl.value = "";
     closeSearch();
-    fetchWeather();
+    await fetchWeather();
   } catch (error) {
     console.error("Location search failed:", error);
     showSearchError("Failed to search location. Please try again.");
+  } finally {
+    setModelLoading(false);
   }
 }
 
@@ -1903,9 +1917,19 @@ function renderActiveModel() {
 }
 
 function setModelLoading(isLoading) {
-  if (!modelPickerBtnEl) return;
-  modelPickerBtnEl.classList.toggle("is-loading", isLoading);
-  modelPickerBtnEl.setAttribute("aria-busy", String(isLoading));
+  if (modelPickerBtnEl) {
+    modelPickerBtnEl.classList.toggle("is-loading", isLoading);
+    modelPickerBtnEl.setAttribute("aria-busy", String(isLoading));
+  }
+  if (weatherIconEl) {
+    weatherIconEl.classList.toggle("is-loading", isLoading);
+    weatherIconEl.setAttribute("aria-busy", String(isLoading));
+    if (isLoading) {
+      weatherIconEl.setAttribute("aria-label", "Loading weather");
+    } else if (weatherIconEl.getAttribute("aria-label") === "Loading weather") {
+      weatherIconEl.setAttribute("aria-label", "Weather forecast");
+    }
+  }
 }
 
 async function fetchWeatherModel(location, modelId = ACTIVE_MODEL_ID) {
