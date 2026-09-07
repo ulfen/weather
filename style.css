@@ -929,3 +929,14 @@ body {
   color: var(--muted);
   padding: 12px;
 }
+
+.attribution {
+  margin-top: 12px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+.attribution a:link{
+    color: var(--muted);
+}
